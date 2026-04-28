@@ -212,7 +212,6 @@ body {
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.45));
   pointer-events: none;
   z-index: 2;
-  animation: tutorial-bird-bob 3.8s ease-in-out infinite;
 }
 
 .tutorial-demo-scope {
@@ -234,7 +233,6 @@ body {
   touch-action: none;
   transition: box-shadow 180ms ease, transform 180ms ease, filter 180ms ease;
   z-index: 3;
-  animation: tutorial-scope-sway 5.2s ease-in-out infinite;
 }
 
 .tutorial-demo.is-dragging .tutorial-demo-scope { cursor: grabbing; }
@@ -255,7 +253,6 @@ body {
   inset: -10%;
   border-radius: 50%;
   box-shadow: 0 0 0 0 rgba(246, 196, 83, 0.36);
-  animation: lock-on-pulse 700ms ease-out 1;
   pointer-events: none;
 }
 
@@ -267,7 +264,6 @@ body {
   filter: drop-shadow(0 12px 28px rgba(0, 0, 0, 0.6));
   pointer-events: none;
   z-index: 4;
-  animation: tutorial-tool-float 4.4s ease-in-out infinite;
 }
 
 .tutorial-cues {
@@ -762,7 +758,6 @@ body {
   padding: 3px;
   background: rgba(6, 19, 17, 0.34);
   filter: drop-shadow(0 0 8px rgba(255, 182, 39, 0.95)) drop-shadow(0 0 18px rgba(0, 0, 0, 0.65));
-  animation: missed-bird-pulse 620ms ease-in-out infinite alternate;
 }
 
 .marsh-stage.is-revealing-misses {
@@ -771,11 +766,6 @@ body {
 
 .marsh-stage.is-revealing-misses .eyepiece {
   opacity: 0.72;
-}
-
-@keyframes missed-bird-pulse {
-  from { box-shadow: 0 0 0 rgba(255, 182, 39, 0); }
-  to { box-shadow: 0 0 22px rgba(255, 182, 39, 0.7); }
 }
 
 /* Eyepiece */
@@ -994,10 +984,6 @@ body {
 
 .bird-button:not(.is-found) .check { display: none; }
 
-.marsh-bird {
-  animation: bird-bob calc(3.8s + (var(--bob-delay, 0ms) / 1000)) ease-in-out infinite;
-}
-
 /* Result */
 .screen-result {
   align-items: center;
@@ -1065,7 +1051,13 @@ body {
 }
 
 .eyepiece.is-confirmed {
-  animation: eyepiece-confirm 360ms ease-out 1;
+  box-shadow:
+    0 0 0 4px rgba(0, 0, 0, 0.92),
+    0 0 0 12px rgba(15, 12, 9, 0.96),
+    0 0 0 18px rgba(105, 210, 125, 0.75),
+    0 0 0 22px rgba(246, 196, 83, 0.42),
+    0 0 110px 36px rgba(105, 210, 125, 0.18) inset,
+    0 30px 60px rgba(0, 0, 0, 0.6);
 }
 
 .analog-timer.is-tick .timer-progress,
@@ -1085,54 +1077,10 @@ body {
   animation: hud-soft-penalty 300ms ease-out 1;
 }
 
-@keyframes bird-bob {
-  0%, 100% { transform: translate(-50%, -50%) scale(var(--bs, 1)) scaleX(var(--flip, 1)) translateY(0); }
-  50% { transform: translate(-50%, -50%) scale(var(--bs, 1)) scaleX(var(--flip, 1)) translateY(-4px); }
-}
-
-@keyframes tutorial-scope-sway {
-  0%, 100% { filter: brightness(1); }
-  50% { filter: brightness(1.05); }
-}
-
-@keyframes tutorial-tool-float {
-  0%, 100% { transform: translateY(0) rotate(0deg); }
-  50% { transform: translateY(-5px) rotate(-0.4deg); }
-}
-
-@keyframes lock-on-pulse {
-  0% { transform: scale(0.98); opacity: 0.2; }
-  100% { transform: scale(1.12); opacity: 0; }
-}
-
 @keyframes bird-found-pop {
   0% { transform: translateY(0) scale(1); }
   55% { transform: translateY(-3px) scale(1.04); }
   100% { transform: translateY(0) scale(1); }
-}
-
-@keyframes eyepiece-confirm {
-  0% { box-shadow:
-    0 0 0 4px rgba(0, 0, 0, 0.92),
-    0 0 0 12px rgba(15, 12, 9, 0.96),
-    0 0 0 17px rgba(80, 69, 50, 0.9),
-    0 0 0 20px rgba(246, 196, 83, 0.36),
-    0 0 90px 34px rgba(0, 0, 0, 0.58) inset,
-    0 30px 60px rgba(0, 0, 0, 0.6); }
-  60% { box-shadow:
-    0 0 0 4px rgba(0, 0, 0, 0.92),
-    0 0 0 12px rgba(15, 12, 9, 0.96),
-    0 0 0 18px rgba(105, 210, 125, 0.75),
-    0 0 0 22px rgba(246, 196, 83, 0.42),
-    0 0 110px 36px rgba(105, 210, 125, 0.18) inset,
-    0 30px 60px rgba(0, 0, 0, 0.6); }
-  100% { box-shadow:
-    0 0 0 4px rgba(0, 0, 0, 0.92),
-    0 0 0 12px rgba(15, 12, 9, 0.96),
-    0 0 0 17px rgba(80, 69, 50, 0.9),
-    0 0 0 20px rgba(246, 196, 83, 0.36),
-    0 0 90px 34px rgba(0, 0, 0, 0.58) inset,
-    0 30px 60px rgba(0, 0, 0, 0.6); }
 }
 
 @keyframes timer-pop {

@@ -98,6 +98,15 @@ test('tutorial eyepiece itself accepts drag input', () => {
   assert.match(styles, /\.tutorial-demo-scope[\s\S]*pointer-events:\s*auto/);
 });
 
+test('birds and spotting scope no longer pulse or bob', () => {
+  assert.doesNotMatch(styles, /tutorial-bird-bob/);
+  assert.doesNotMatch(styles, /bird-bob/);
+  assert.doesNotMatch(styles, /tutorial-scope-sway/);
+  assert.doesNotMatch(styles, /lock-on-pulse/);
+  assert.doesNotMatch(styles, /eyepiece-confirm/);
+  assert.doesNotMatch(styles, /missed-bird-pulse/);
+});
+
 test('service worker no longer caches superseded source assets', () => {
   assert.doesNotMatch(serviceWorker, /marsh_madness_intro\.mp4/);
   assert.doesNotMatch(serviceWorker, /marsh_madness_title_trimmed\.png/);
