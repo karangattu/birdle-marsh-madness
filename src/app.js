@@ -8,17 +8,17 @@ import {
 
 // ---------------- Bird catalog ----------------
 const BIRDS = [
-  { id: 'american_avocet',       name: 'American Avocet' },
-  { id: 'american_coot',         name: 'American Coot' },
-  { id: 'black-necked_stilt',    name: 'Black-necked Stilt' },
-  { id: 'canada_goose',          name: 'Canada Goose' },
-  { id: 'great_egret',           name: 'Great Egret' },
-  { id: 'mallard',               name: 'Mallard' },
-  { id: 'marsh_wren',            name: 'Marsh Wren' },
-  { id: 'northern_shoveler',     name: 'Northern Shoveler' },
-  { id: 'red-winged_blackbird',  name: 'Red-winged Blackbird' },
-  { id: 'snowy_egret',           name: 'Snowy Egret' },
-  { id: 'song_sparrow',          name: 'Song Sparrow' },
+  { id: 'american_avocet',       name: 'American Avocet', difficulty: 'medium' },
+  { id: 'american_coot',         name: 'American Coot', difficulty: 'easy' },
+  { id: 'black-necked_stilt',    name: 'Black-necked Stilt', difficulty: 'medium' },
+  { id: 'canada_goose',          name: 'Canada Goose', difficulty: 'easy' },
+  { id: 'great_egret',           name: 'Great Egret', difficulty: 'easy' },
+  { id: 'mallard',               name: 'Mallard', difficulty: 'easy' },
+  { id: 'marsh_wren',            name: 'Marsh Wren', difficulty: 'hard' },
+  { id: 'northern_shoveler',     name: 'Northern Shoveler', difficulty: 'hard' },
+  { id: 'red-winged_blackbird',  name: 'Red-winged Blackbird', difficulty: 'hard' },
+  { id: 'snowy_egret',           name: 'Snowy Egret', difficulty: 'easy' },
+  { id: 'song_sparrow',          name: 'Song Sparrow', difficulty: 'hard' },
 ].map((b) => ({ ...b, image: `assets/${b.id}.png` }));
 
 const BEST_TIME_KEY = 'birdle:bestTimeSeconds';
@@ -63,6 +63,7 @@ const els = {
   timeRemaining: $('timeRemaining'),
   foundCount: $('foundCount'),
   misses: $('misses'),
+  tutorialAudio: $('tutorialAudio'),
   gameAudio: $('gameAudio'),
   birdButtons: $('birdButtons'),
   restartButton: $('restartButton'),
@@ -90,6 +91,11 @@ function showScreen(name) {
   }
   if (name !== 'game') {
     pauseMarshAmbience(name === 'splash');
+  }
+  if (name === 'tutorial') {
+    playTutorialAmbience();
+  } else {
+    pauseTutorialAmbience();
   }
   activeScreen = name;
   if (name === 'tutorial') {
@@ -473,6 +479,20 @@ function enterFullscreenMode() {
   document.documentElement.requestFullscreen().catch(() => {});
 }
 
+function playTutorialAmbience() {
+  els.tutorialAudio.pause();
+  els.tutorialAudio.currentTime = 0;
+  els.tutorialAudio.load();
+  els.tutorialAudio.volume = 0.22;
+  const playPromise = els.tutorialAudio.play();
+  if (playPromise) playPromise.catch(() => {});
+}
+
+function pauseTutorialAmbience(reset = false) {
+  els.tutorialAudio.pause();
+  if (reset) els.tutorialAudio.currentTime = 0;
+}
+
 function beginGameSequence() {
   enterFullscreenMode();
   showScreen('intro');
@@ -493,6 +513,7 @@ function advanceFromIntro() {
 // ---------------- Round lifecycle ----------------
 function startRound() {
   enterFullscreenMode();
+  pauseTutorialAmbience(true);
   if (missedRevealTimer) {
     clearTimeout(missedRevealTimer);
     missedRevealTimer = null;

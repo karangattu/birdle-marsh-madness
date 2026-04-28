@@ -11,6 +11,7 @@ test('tutorial exposes a draggable demo scope and a Mallard target button', () =
   assert.match(html, /id="tutorialDemo"/);
   assert.match(html, /id="tutorialDemoScope"/);
   assert.match(html, /id="demoMallardButton"/);
+  assert.match(html, /Game zoom:\s*<strong>4\.2x<\/strong>/);
 });
 
 test('game uses a fixed 4.2x zoom and looping marsh ambience', () => {
@@ -22,8 +23,20 @@ test('game uses a fixed 4.2x zoom and looping marsh ambience', () => {
   assert.match(html, /loop/);
 });
 
+test('tutorial screen includes looping background audio', () => {
+  assert.match(html, /id="tutorialAudio"/);
+  assert.match(html, /src="assets\/tutorial_sound\.mp3"/);
+  assert.match(html, /loop/);
+  assert.match(appSource, /playTutorialAmbience/);
+  assert.match(appSource, /pauseTutorialAmbience/);
+});
+
 test('service worker caches the marsh ambience for installed play', () => {
   assert.match(serviceWorker, /assets\/marsh_sounds\.mp3/);
+});
+
+test('service worker caches the tutorial ambience for installed play', () => {
+  assert.match(serviceWorker, /assets\/tutorial_sound\.mp3/);
 });
 
 test('missed birds are revealed for four seconds before results', () => {

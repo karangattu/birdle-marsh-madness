@@ -10,6 +10,7 @@ const APP_SHELL = [
   './assets/marsh_madness_poster.png',
   './assets/poster.png',
   './assets/marsh_backdrop.png',
+  './assets/tutorial_sound.mp3',
   './assets/marsh_sounds.mp3',
   './assets/looking_through_scope.png',
   './assets/pwa-icon-192.png',

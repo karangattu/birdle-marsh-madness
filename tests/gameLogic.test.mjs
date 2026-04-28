@@ -58,6 +58,16 @@ test('birds lower in the frame (closer to viewer) are larger than birds further 
   assert.ok(sorted[0].scale <= sorted[sorted.length - 1].scale);
 });
 
+test('difficulty tiers make easy birds larger and lower than hard birds', () => {
+  const random = () => 0.5;
+  const easy = createPlacements([{ id: 'easy', difficulty: 'easy' }], random)[0];
+  const medium = createPlacements([{ id: 'medium', difficulty: 'medium' }], random)[0];
+  const hard = createPlacements([{ id: 'hard', difficulty: 'hard' }], random)[0];
+
+  assert.ok(easy.yPct > medium.yPct && medium.yPct > hard.yPct);
+  assert.ok(easy.scale > medium.scale && medium.scale > hard.scale);
+});
+
 test('all bird species are placed every round', () => {
   const placements = createPlacements(ALL_BIRDS, deterministicRandom(15));
   assert.equal(placements.length, ALL_BIRDS.length);

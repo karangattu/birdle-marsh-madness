@@ -10,18 +10,40 @@ export const GAME_LENGTH_SECONDS = 60;
 
 // Bird placement bounds (percent of stage). Keep birds in the far marsh band:
 // below the open sky, but not so close that the scope decoration covers them.
-const X_MIN = 6;
-const X_MAX = 94;
-const Y_MIN = 42;
-const Y_MAX = 70;
+const PLACEMENT_PROFILES = {
+  easy: {
+    xMin: 12,
+    xMax: 88,
+    yMin: 50,
+    yMax: 70,
+    scaleMin: 1.0,
+    scaleMax: 1.35,
+    minSpacingPct: 11,
+  },
+  medium: {
+    xMin: 8,
+    xMax: 92,
+    yMin: 46,
+    yMax: 66,
+    scaleMin: 0.86,
+    scaleMax: 1.18,
+    minSpacingPct: 9,
+  },
+  hard: {
+    xMin: 6,
+    xMax: 94,
+    yMin: 42,
+    yMax: 60,
+    scaleMin: 0.72,
+    scaleMax: 1.0,
+    minSpacingPct: 8,
+  },
+};
 
 const SCOPE_ART_X_MIN = 72;
 const SCOPE_ART_Y_MIN = 40;
 
-const SCALE_MIN = 0.78;
-const SCALE_MAX = 1.35;
-
-const MIN_SPACING_PCT = 9;
+const DEFAULT_PROFILE = PLACEMENT_PROFILES.hard;
 
 export function createPlacements(birds, random = Math.random) {
   if (!Array.isArray(birds) || birds.length === 0) {
@@ -30,17 +52,18 @@ export function createPlacements(birds, random = Math.random) {
 
   const placements = [];
   for (const bird of birds) {
+    const profile = getPlacementProfile(bird);
     let candidate;
     let attempts = 0;
     do {
-      const yPct = Y_MIN + random() * (Y_MAX - Y_MIN);
-      let xPct = X_MIN + random() * (X_MAX - X_MIN);
+      const yPct = profile.yMin + random() * (profile.yMax - profile.yMin);
+      let xPct = profile.xMin + random() * (profile.xMax - profile.xMin);
       if (xPct >= SCOPE_ART_X_MIN && yPct >= SCOPE_ART_Y_MIN) {
-        xPct = X_MIN + random() * (SCOPE_ART_X_MIN - X_MIN - 2);
+        xPct = profile.xMin + random() * (SCOPE_ART_X_MIN - profile.xMin - 2);
       }
       // Perspective: birds lower on the screen (closer to viewer) appear larger.
-      const depth = (yPct - Y_MIN) / (Y_MAX - Y_MIN); // 0 = far, 1 = near
-      const scale = SCALE_MIN + depth * (SCALE_MAX - SCALE_MIN);
+      const depth = (yPct - profile.yMin) / (profile.yMax - profile.yMin); // 0 = far, 1 = near
+      const scale = profile.scaleMin + depth * (profile.scaleMax - profile.scaleMin);
       candidate = {
         birdId: bird.id,
         xPct,
@@ -50,21 +73,25 @@ export function createPlacements(birds, random = Math.random) {
         bobDelayMs: 0,
       };
       attempts += 1;
-    } while (attempts < 40 && (tooCloseToOthers(candidate, placements) || overlapsScopeArt(candidate)));
+    } while (attempts < 40 && (tooCloseToOthers(candidate, placements, profile.minSpacingPct) || overlapsScopeArt(candidate)));
     placements.push(candidate);
   }
   return placements;
+}
+
+function getPlacementProfile(bird) {
+  return PLACEMENT_PROFILES[bird?.difficulty] ?? DEFAULT_PROFILE;
 }
 
 function overlapsScopeArt(candidate) {
   return candidate.xPct >= SCOPE_ART_X_MIN && candidate.yPct >= SCOPE_ART_Y_MIN;
 }
 
-function tooCloseToOthers(candidate, placements) {
+function tooCloseToOthers(candidate, placements, minSpacingPct) {
   for (const p of placements) {
     const dx = candidate.xPct - p.xPct;
     const dy = candidate.yPct - p.yPct;
-    if (Math.hypot(dx, dy) < MIN_SPACING_PCT) return true;
+    if (Math.hypot(dx, dy) < minSpacingPct) return true;
   }
   return false;
 }

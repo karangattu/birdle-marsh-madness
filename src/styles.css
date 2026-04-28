@@ -179,6 +179,17 @@ body {
   flex-wrap: wrap;
 }
 
+.tutorial-zoom-note {
+  margin: 14px 0 0;
+  color: var(--text-dim);
+  font-size: 0.95rem;
+  letter-spacing: 0.2px;
+}
+
+.tutorial-zoom-note strong {
+  color: var(--accent);
+}
+
 .tutorial-demo {
   position: relative;
   overflow: hidden;
