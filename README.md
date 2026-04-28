@@ -1,6 +1,20 @@
 # Birdle: Marsh Madness
 
-A static one-minute bird identification game for GitHub Pages.
+A static spotting-scope hidden-bird game for GitHub Pages. You have 60 seconds
+to find all 11 birds hidden across the marsh — they're tiny dots from this far
+away, so you'll need to drag the scope across the scene and identify each
+species the moment it appears in the eyepiece.
+
+## How To Play
+
+1. **Splash → Start** — opens the tutorial on first run, otherwise jumps straight
+   into a round.
+2. **Drag the spotting scope** across the marsh with mouse or touch. The
+   eyepiece magnifies whatever is under it.
+3. When a bird is centered in the eyepiece, the matching species button lights
+   up. Tap it to **log the sighting**. Wrong taps cost a miss.
+4. Find all 11 species before the 60-second timer expires. Faster runs save a
+   **best time** to local storage.
 
 ## Run Locally
 
