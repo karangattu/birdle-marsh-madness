@@ -125,7 +125,6 @@ let missedRevealTimer = null;
 let isRevealingMisses = false;
 let lastHud = { remainingSeconds: GAME_LENGTH_SECONDS, foundCount: 0, misses: 0 };
 let foundCueContext = null;
-let urgencyCuePlayed = false;
 
 // ---------------- Setup splash best-time ----------------
 function refreshBestTimeLabel() {
@@ -476,9 +475,8 @@ function refreshHud() {
   els.analogTimer.style.setProperty('--timer-hand-angle', `${(elapsedSeconds / GAME_LENGTH_SECONDS) * 360}deg`);
   els.analogTimer.setAttribute('aria-label', `${state.remainingSeconds} seconds remaining`);
   els.analogTimer.classList.toggle('is-warn', state.remainingSeconds <= 10);
-  if (state.remainingSeconds <= 10 && !urgencyCuePlayed && state.remainingSeconds !== previousRemaining) {
-    urgencyCuePlayed = true;
-    playUrgencyCue();
+  if (state.remainingSeconds <= 10 && state.remainingSeconds > 0 && state.remainingSeconds !== previousRemaining) {
+    playUrgencyCue(state.remainingSeconds);
   }
   if (state.remainingSeconds !== previousRemaining) {
     els.analogTimer.classList.add('is-tick');
@@ -539,7 +537,7 @@ function playFoundCue() {
   osc.stop(now + 0.14);
 }
 
-function playUrgencyCue() {
+function playUrgencyCue(secondsRemaining) {
   const AudioContextClass = window.AudioContext || window.webkitAudioContext;
   if (!AudioContextClass) return;
   foundCueContext ??= new AudioContextClass();
@@ -550,11 +548,15 @@ function playUrgencyCue() {
   const now = context.currentTime;
   const gain = context.createGain();
   const osc = context.createOscillator();
+  const countdownStep = clamp(11 - secondsRemaining, 1, 10);
+  const baseFrequency = 410 + (countdownStep * 26);
+  const endFrequency = Math.max(280, baseFrequency - 92);
+  const peakGain = 0.028 + (countdownStep * 0.0035);
   osc.type = 'sine';
-  osc.frequency.setValueAtTime(520, now);
-  osc.frequency.exponentialRampToValueAtTime(360, now + 0.12);
+  osc.frequency.setValueAtTime(baseFrequency, now);
+  osc.frequency.exponentialRampToValueAtTime(endFrequency, now + 0.11);
   gain.gain.setValueAtTime(0.0001, now);
-  gain.gain.exponentialRampToValueAtTime(0.04, now + 0.015);
+  gain.gain.exponentialRampToValueAtTime(peakGain, now + 0.015);
   gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.18);
   osc.connect(gain);
   gain.connect(context.destination);
@@ -597,7 +599,6 @@ function advanceFromIntro() {
 function startRound() {
   enterFullscreenMode();
   pauseTutorialAmbience(true);
-  urgencyCuePlayed = false;
   if (missedRevealTimer) {
     clearTimeout(missedRevealTimer);
     missedRevealTimer = null;

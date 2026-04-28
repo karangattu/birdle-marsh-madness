@@ -75,10 +75,11 @@ test('result screen includes payoff and progress lines', () => {
   assert.match(appSource, /You are .* points from the high score\./);
 });
 
-test('game plays an urgency cue at ten seconds left', () => {
-  assert.match(appSource, /urgencyCuePlayed/);
+test('game plays an audible countdown during the last ten seconds', () => {
   assert.match(appSource, /playUrgencyCue/);
   assert.match(appSource, /state\.remainingSeconds <= 10/);
+  assert.match(appSource, /state\.remainingSeconds > 0/);
+  assert.match(appSource, /playUrgencyCue\(state\.remainingSeconds\)/);
 });
 
 test('game requests fullscreen when a session starts', () => {
