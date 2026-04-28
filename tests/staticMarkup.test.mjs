@@ -68,10 +68,30 @@ test('game over screen includes an SFBBO support line', () => {
   assert.match(appSource, /Want to support the real-world conservation work behind Birdle\? Explore SFBBO surveys and field projects at <a href="https:\/\/sfbbo\.org" target="_blank" rel="noreferrer">sfbbo\.org<\/a>\./);
 });
 
+test('result screen includes payoff and progress lines', () => {
+  assert.match(html, /id="resultCompare"/);
+  assert.match(html, /id="resultProgress"/);
+  assert.match(appSource, /Rank:/);
+  assert.match(appSource, /You are .* points from the high score\./);
+});
+
+test('game plays an urgency cue at ten seconds left', () => {
+  assert.match(appSource, /urgencyCuePlayed/);
+  assert.match(appSource, /playUrgencyCue/);
+  assert.match(appSource, /state\.remainingSeconds <= 10/);
+});
+
 test('game requests fullscreen when a session starts', () => {
   assert.match(appSource, /function enterFullscreenMode\(\)/);
   assert.match(appSource, /requestFullscreen\(\)\.catch\(/);
   assert.match(appSource, /enterFullscreenMode\(\);\s*\n\s*showScreen\('intro'\);/);
+});
+
+test('game shows a portrait rotate guard on touch devices', () => {
+  assert.match(html, /id="orientationGuard"/);
+  assert.match(html, /Rotate to landscape/);
+  assert.match(styles, /@media \(orientation: portrait\) and \(pointer: coarse\)/);
+  assert.match(styles, /orientation-guard-icon/);
 });
 
 test('tutorial eyepiece itself accepts drag input', () => {

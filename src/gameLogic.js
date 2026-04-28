@@ -70,7 +70,7 @@ export function createPlacements(birds, random = Math.random) {
         yPct,
         flip: random() < 0.5 ? -1 : 1,
         scale,
-        bobDelayMs: 0,
+        bobDelayMs: Math.floor(random() * 2200),
       };
       attempts += 1;
     } while (attempts < 40 && (tooCloseToOthers(candidate, placements, profile.minSpacingPct) || overlapsScopeArt(candidate)));

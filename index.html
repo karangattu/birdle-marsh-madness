@@ -105,6 +105,19 @@
           </div>
         </header>
 
+        <div class="orientation-guard" id="orientationGuard" role="status" aria-live="polite">
+          <div class="orientation-guard-card">
+            <svg class="orientation-guard-icon" viewBox="0 0 64 64" aria-hidden="true">
+              <rect x="20" y="8" width="24" height="40" rx="5" ry="5" />
+              <path d="M24 18a14 14 0 0 1 24 8" />
+              <path d="M44 14h4v7" />
+              <path d="M48 21h-7" />
+            </svg>
+            <h2>Rotate to landscape</h2>
+            <p>Birdle plays best with the marsh wide open. Turn your phone sideways to keep hunting.</p>
+          </div>
+        </div>
+
         <div class="playfield">
           <div class="marsh-stage" id="marshStage">
             <div class="marsh-content distant" id="distantContent">
@@ -142,6 +155,8 @@
           <h2 id="resultTitle">Round complete</h2>
           <p class="result-stats" id="resultStats"></p>
           <p class="result-best" id="resultBest"></p>
+          <p class="result-compare" id="resultCompare"></p>
+          <p class="result-progress" id="resultProgress"></p>
           <p class="result-support" id="resultSupport"></p>
           <div class="result-actions">
             <button id="resultRestart" class="primary-action" type="button">

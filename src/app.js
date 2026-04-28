@@ -72,6 +72,8 @@ const els = {
   resultTitle: $('resultTitle'),
   resultStats: $('resultStats'),
   resultBest: $('resultBest'),
+  resultCompare: $('resultCompare'),
+  resultProgress: $('resultProgress'),
   resultSupport: $('resultSupport'),
   resultRestart: $('resultRestart'),
   resultHome: $('resultHome'),
@@ -121,6 +123,9 @@ let tutorialPointerCaptureEl = null;
 let tutorialNudgeTimer = null;
 let missedRevealTimer = null;
 let isRevealingMisses = false;
+let lastHud = { remainingSeconds: GAME_LENGTH_SECONDS, foundCount: 0, misses: 0 };
+let foundCueContext = null;
+let urgencyCuePlayed = false;
 
 // ---------------- Setup splash best-time ----------------
 function refreshBestTimeLabel() {
@@ -219,6 +224,7 @@ function onBirdButtonClick(e) {
   if (result.correct) {
     flashFeedback(`Spotted: ${BIRDS.find((b) => b.id === id).name}!`, 'good');
     markBirdFound(id);
+    playFoundCue();
   } else if (result.reason === 'no-focus') {
     flashFeedback('Nothing in the eyepiece — keep scanning', 'bad');
   } else if (result.reason === 'already-found') {
@@ -238,7 +244,11 @@ function markBirdFound(birdId) {
   const btn = els.birdButtons.querySelector(`[data-bird-id="${cssEscape(birdId)}"]`);
   if (btn) {
     btn.classList.add('is-found');
+    btn.classList.add('is-just-found');
+    window.setTimeout(() => btn.classList.remove('is-just-found'), 520);
   }
+  els.eyepiece.classList.add('is-confirmed');
+  window.setTimeout(() => els.eyepiece.classList.remove('is-confirmed'), 360);
 }
 
 function cssEscape(s) {
@@ -453,6 +463,12 @@ function parsePx(value) {
 
 // ---------------- HUD ----------------
 function refreshHud() {
+  const previousRemaining = lastHud.remainingSeconds;
+  const previousFound = lastHud.foundCount;
+  const previousMisses = lastHud.misses;
+  const nextFound = state.foundIds.size;
+  const nextMisses = state.misses;
+
   els.timeRemaining.textContent = String(state.remainingSeconds);
   const elapsedSeconds = GAME_LENGTH_SECONDS - state.remainingSeconds;
   const progress = state.remainingSeconds / GAME_LENGTH_SECONDS;
@@ -460,8 +476,28 @@ function refreshHud() {
   els.analogTimer.style.setProperty('--timer-hand-angle', `${(elapsedSeconds / GAME_LENGTH_SECONDS) * 360}deg`);
   els.analogTimer.setAttribute('aria-label', `${state.remainingSeconds} seconds remaining`);
   els.analogTimer.classList.toggle('is-warn', state.remainingSeconds <= 10);
-  els.foundCount.textContent = `${state.foundIds.size}/${BIRDS.length}`;
-  els.misses.textContent = String(state.misses);
+  if (state.remainingSeconds <= 10 && !urgencyCuePlayed && state.remainingSeconds !== previousRemaining) {
+    urgencyCuePlayed = true;
+    playUrgencyCue();
+  }
+  if (state.remainingSeconds !== previousRemaining) {
+    els.analogTimer.classList.add('is-tick');
+    window.clearTimeout(els.analogTimer._tickTimer);
+    els.analogTimer._tickTimer = window.setTimeout(() => els.analogTimer.classList.remove('is-tick'), 180);
+  }
+  els.foundCount.textContent = `${nextFound}/${BIRDS.length}`;
+  els.misses.textContent = String(nextMisses);
+  if (nextFound > previousFound) {
+    els.foundCount.classList.add('is-bump');
+    window.clearTimeout(els.foundCount._pulseTimer);
+    els.foundCount._pulseTimer = window.setTimeout(() => els.foundCount.classList.remove('is-bump'), 260);
+  }
+  if (nextMisses > previousMisses) {
+    els.misses.classList.add('is-soft-penalty');
+    window.clearTimeout(els.misses._pulseTimer);
+    els.misses._pulseTimer = window.setTimeout(() => els.misses.classList.remove('is-soft-penalty'), 300);
+  }
+  lastHud = { remainingSeconds: state.remainingSeconds, foundCount: nextFound, misses: nextMisses };
 }
 
 function flashFeedback(text, kind) {
@@ -478,6 +514,52 @@ function flashFeedback(text, kind) {
 function enterFullscreenMode() {
   if (document.fullscreenElement || !document.fullscreenEnabled) return;
   document.documentElement.requestFullscreen().catch(() => {});
+}
+
+function playFoundCue() {
+  const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+  if (!AudioContextClass) return;
+  foundCueContext ??= new AudioContextClass();
+  const context = foundCueContext;
+  if (context.state === 'suspended') {
+    context.resume().catch(() => {});
+  }
+  const now = context.currentTime;
+  const gain = context.createGain();
+  const osc = context.createOscillator();
+  osc.type = 'triangle';
+  osc.frequency.setValueAtTime(740, now);
+  osc.frequency.exponentialRampToValueAtTime(980, now + 0.09);
+  gain.gain.setValueAtTime(0.0001, now);
+  gain.gain.exponentialRampToValueAtTime(0.05, now + 0.02);
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.13);
+  osc.connect(gain);
+  gain.connect(context.destination);
+  osc.start(now);
+  osc.stop(now + 0.14);
+}
+
+function playUrgencyCue() {
+  const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+  if (!AudioContextClass) return;
+  foundCueContext ??= new AudioContextClass();
+  const context = foundCueContext;
+  if (context.state === 'suspended') {
+    context.resume().catch(() => {});
+  }
+  const now = context.currentTime;
+  const gain = context.createGain();
+  const osc = context.createOscillator();
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(520, now);
+  osc.frequency.exponentialRampToValueAtTime(360, now + 0.12);
+  gain.gain.setValueAtTime(0.0001, now);
+  gain.gain.exponentialRampToValueAtTime(0.04, now + 0.015);
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.18);
+  osc.connect(gain);
+  gain.connect(context.destination);
+  osc.start(now);
+  osc.stop(now + 0.19);
 }
 
 function playTutorialAmbience() {
@@ -515,6 +597,7 @@ function advanceFromIntro() {
 function startRound() {
   enterFullscreenMode();
   pauseTutorialAmbience(true);
+  urgencyCuePlayed = false;
   if (missedRevealTimer) {
     clearTimeout(missedRevealTimer);
     missedRevealTimer = null;
@@ -594,7 +677,8 @@ function showResultScreen() {
   const finalScore = score(state);
   const highScore = writeHighScoreIfBetter(finalScore);
   const won = state.isWon;
-  els.resultTitle.textContent = won ? 'You spotted them all!' : "Time's up";
+  const tier = scoreTierFor(finalScore);
+  els.resultTitle.textContent = won ? `You spotted them all — ${tier.label}` : tier.label;
   const seconds = won ? state.finishedSeconds : GAME_LENGTH_SECONDS;
   els.resultStats.innerHTML = won
     ? `Found <strong>${state.foundIds.size}/${BIRDS.length}</strong> in <strong>${seconds}s</strong> with <strong>${state.misses}</strong> misses.<br>Score: <strong>${finalScore}</strong>`
@@ -614,10 +698,24 @@ function showResultScreen() {
     if (prevBest != null) summaryLines.push(`Best time: ${prevBest}s`);
   }
   els.resultBest.textContent = summaryLines.join(' | ');
+  els.resultCompare.textContent = `Rank: ${tier.label}`;
+  const pointsFromHighScore = Math.max(0, highScore.highScore - finalScore);
+  els.resultProgress.textContent = pointsFromHighScore === 0
+    ? 'You are at the high score.'
+    : `You are ${pointsFromHighScore} points from the high score.`;
   els.resultSupport.innerHTML = 'Want to support the real-world conservation work behind Birdle? Explore SFBBO surveys and field projects at <a href="https://sfbbo.org" target="_blank" rel="noreferrer">sfbbo.org</a>.';
 
   showScreen('result');
   refreshBestTimeLabel();
+}
+
+function scoreTierFor(scoreValue) {
+  if (scoreValue >= 1050) return { label: 'Marsh Legend' };
+  if (scoreValue >= 900) return { label: 'Field Guide Ace' };
+  if (scoreValue >= 750) return { label: 'Birding Pro' };
+  if (scoreValue >= 550) return { label: 'Sharp-Eyed Spotter' };
+  if (scoreValue >= 350) return { label: 'Trail Scout' };
+  return { label: 'New to the Marsh' };
 }
 
 // ---------------- Wiring ----------------
@@ -627,6 +725,7 @@ function init() {
   attachStageListeners();
   attachTutorialDemoListeners();
   refreshBestTimeLabel();
+  lastHud = { remainingSeconds: GAME_LENGTH_SECONDS, foundCount: 0, misses: 0 };
 
   els.splashStart.addEventListener('click', () => {
     returnToScreenAfterTutorial = 'splash';
