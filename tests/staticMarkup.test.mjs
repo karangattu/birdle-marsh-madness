@@ -41,6 +41,11 @@ test('opening screen can show locally stored high score', () => {
   assert.doesNotMatch(html, /splash-title/);
 });
 
+test('game over screen includes an SFBBO support line', () => {
+  assert.match(html, /id="resultSupport"/);
+  assert.match(appSource, /Help us in real life with surveys at SFBBO\. Learn more at sfbbo\.org\./);
+});
+
 test('tutorial eyepiece itself accepts drag input', () => {
   assert.match(styles, /\.tutorial-demo-scope[\s\S]*pointer-events:\s*auto/);
 });

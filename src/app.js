@@ -70,6 +70,7 @@ const els = {
   resultTitle: $('resultTitle'),
   resultStats: $('resultStats'),
   resultBest: $('resultBest'),
+  resultSupport: $('resultSupport'),
   resultRestart: $('resultRestart'),
   resultHome: $('resultHome'),
 };
@@ -584,6 +585,7 @@ function showResultScreen() {
     if (prevBest != null) summaryLines.push(`Best time: ${prevBest}s`);
   }
   els.resultBest.textContent = summaryLines.join(' | ');
+  els.resultSupport.textContent = 'Help us in real life with surveys at SFBBO. Learn more at sfbbo.org.';
 
   showScreen('result');
   refreshBestTimeLabel();
