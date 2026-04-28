@@ -13,10 +13,10 @@ test('tutorial exposes a draggable demo scope and a Mallard target button', () =
   assert.match(html, /id="demoMallardButton"/);
 });
 
-test('game markup includes zoom controls and looping marsh ambience', () => {
-  assert.match(html, /id="zoomControls"/);
-  assert.match(html, /data-zoom="2\.8"/);
-  assert.match(html, /data-zoom="4\.2"/);
+test('game uses a fixed 4.2x zoom and looping marsh ambience', () => {
+  assert.doesNotMatch(html, /id="zoomControls"/);
+  assert.match(appSource, /const DEFAULT_ZOOM = 4\.2;/);
+  assert.match(appSource, /let currentZoom = DEFAULT_ZOOM;/);
   assert.match(html, /id="gameAudio"/);
   assert.match(html, /src="assets\/marsh_sounds\.mp3"/);
   assert.match(html, /loop/);

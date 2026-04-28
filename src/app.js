@@ -23,7 +23,7 @@ const BIRDS = [
 
 const BEST_TIME_KEY = 'birdle:bestTimeSeconds';
 const HIGH_SCORE_KEY = 'birdle:highScore';
-const DEFAULT_ZOOM = 3.4;
+const DEFAULT_ZOOM = 4.2;
 const MISSED_BIRD_REVEAL_MS = 4000;
 const TUTORIAL_TARGET = { x: 0.56, y: 0.55 };
 
@@ -63,7 +63,6 @@ const els = {
   timeRemaining: $('timeRemaining'),
   foundCount: $('foundCount'),
   misses: $('misses'),
-  zoomControls: $('zoomControls'),
   gameAudio: $('gameAudio'),
   birdButtons: $('birdButtons'),
   restartButton: $('restartButton'),
@@ -380,25 +379,13 @@ function attachTutorialDemoListeners() {
 function setZoom(zoom) {
   currentZoom = zoom;
   els.marshStage.style.setProperty('--magnify', String(zoom));
-  for (const button of els.zoomControls.querySelectorAll('.zoom-button')) {
-    const isActive = Number.parseFloat(button.dataset.zoom) === zoom;
-    button.classList.toggle('is-active', isActive);
-    button.setAttribute('aria-pressed', String(isActive));
-  }
   updateFocus();
 }
 
-function attachZoomControls() {
-  els.zoomControls.addEventListener('click', (e) => {
-    const button = e.target.closest('.zoom-button');
-    if (!button) return;
-    const zoom = Number.parseFloat(button.dataset.zoom);
-    if (!Number.isFinite(zoom)) return;
-    setZoom(zoom);
-  });
-}
-
 function playMarshAmbience() {
+  els.gameAudio.pause();
+  els.gameAudio.currentTime = 0;
+  els.gameAudio.load();
   els.gameAudio.volume = 0.28;
   const playPromise = els.gameAudio.play();
   if (playPromise) playPromise.catch(() => {});
@@ -482,7 +469,9 @@ function flashFeedback(text, kind) {
 
 function beginGameSequence() {
   showScreen('intro');
+  els.introVideo.pause();
   els.introVideo.currentTime = 0;
+  els.introVideo.load();
   const playPromise = els.introVideo.play();
   if (playPromise) {
     playPromise.catch(() => showScreen('tutorial'));
@@ -606,7 +595,6 @@ function init() {
   renderBirdButtons();
   attachStageListeners();
   attachTutorialDemoListeners();
-  attachZoomControls();
   refreshBestTimeLabel();
 
   els.splashStart.addEventListener('click', () => {

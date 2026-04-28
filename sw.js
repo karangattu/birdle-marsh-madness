@@ -9,7 +9,6 @@ const APP_SHELL = [
   './src/gameLogic.js',
   './assets/poster.png',
   './assets/marsh_backdrop.png',
-  './assets/marsh_madness_intro_optimized.mp4',
   './assets/birdle_logo.png',
   './assets/marsh_madness_title_trimmed.png',
   './assets/marsh_sounds.mp3',
