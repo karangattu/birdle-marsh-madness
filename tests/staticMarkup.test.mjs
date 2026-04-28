@@ -46,6 +46,12 @@ test('game over screen includes an SFBBO support line', () => {
   assert.match(appSource, /Help us in real life with surveys at SFBBO\. Learn more at sfbbo\.org\./);
 });
 
+test('game requests fullscreen when a session starts', () => {
+  assert.match(appSource, /function enterFullscreenMode\(\)/);
+  assert.match(appSource, /requestFullscreen\(\)\.catch\(/);
+  assert.match(appSource, /enterFullscreenMode\(\);\s*\n\s*showScreen\('intro'\);/);
+});
+
 test('tutorial eyepiece itself accepts drag input', () => {
   assert.match(styles, /\.tutorial-demo-scope[\s\S]*pointer-events:\s*auto/);
 });

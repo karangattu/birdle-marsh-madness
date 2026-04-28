@@ -468,7 +468,13 @@ function flashFeedback(text, kind) {
   }, 1400);
 }
 
+function enterFullscreenMode() {
+  if (document.fullscreenElement || !document.fullscreenEnabled) return;
+  document.documentElement.requestFullscreen().catch(() => {});
+}
+
 function beginGameSequence() {
+  enterFullscreenMode();
   showScreen('intro');
   els.introVideo.pause();
   els.introVideo.currentTime = 0;
@@ -486,6 +492,7 @@ function advanceFromIntro() {
 
 // ---------------- Round lifecycle ----------------
 function startRound() {
+  enterFullscreenMode();
   if (missedRevealTimer) {
     clearTimeout(missedRevealTimer);
     missedRevealTimer = null;
