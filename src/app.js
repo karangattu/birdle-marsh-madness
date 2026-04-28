@@ -638,10 +638,9 @@ function init() {
 
 function preloadImages() {
   const urls = [
-    'assets/poster.png',
+    'assets/marsh_madness_poster.png',
     'assets/marsh_backdrop.png',
-    'assets/birdle_logo.png',
-    'assets/marsh_madness_title_trimmed.png',
+    'assets/poster.png',
     ...BIRDS.map((b) => b.image),
   ];
   for (const url of urls) {

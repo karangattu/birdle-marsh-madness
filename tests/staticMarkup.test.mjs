@@ -35,6 +35,10 @@ test('missed birds are revealed for four seconds before results', () => {
 test('opening screen can show locally stored high score', () => {
   assert.match(appSource, /HIGH_SCORE_KEY\s*=\s*'birdle:highScore'/);
   assert.match(appSource, /High score:/);
+  assert.match(html, /src="assets\/marsh_madness_poster\.png"/);
+  assert.doesNotMatch(html, /splash-sfbbo/);
+  assert.doesNotMatch(html, /splash-logo/);
+  assert.doesNotMatch(html, /splash-title/);
 });
 
 test('tutorial eyepiece itself accepts drag input', () => {
@@ -43,5 +47,7 @@ test('tutorial eyepiece itself accepts drag input', () => {
 
 test('service worker no longer caches superseded source assets', () => {
   assert.doesNotMatch(serviceWorker, /marsh_madness_intro\.mp4/);
-  assert.doesNotMatch(serviceWorker, /marsh_madness_title\.png/);
+  assert.doesNotMatch(serviceWorker, /marsh_madness_title_trimmed\.png/);
+  assert.doesNotMatch(serviceWorker, /birdle_logo\.png/);
+  assert.doesNotMatch(serviceWorker, /SFBBO_Logo_Rounded\.png/);
 });

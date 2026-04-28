@@ -63,12 +63,12 @@ body {
 
 /* ============== SPLASH ============== */
 .screen-splash {
-  align-items: center;
-  justify-content: center;
+  align-items: stretch;
+  justify-content: flex-end;
   overflow: hidden;
 }
 
-.splash-bg {
+.splash-poster {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -78,53 +78,16 @@ body {
   z-index: 0;
 }
 
-.splash-overlay {
+.splash-bottom-bar {
   position: relative;
   z-index: 1;
-  text-align: center;
-  padding: clamp(20px, 5vmin, 60px);
+  width: 100%;
+  padding: clamp(14px, 3.5vmin, 40px);
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: clamp(10px, 1.6vmin, 20px);
-  background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.55) 0%, rgba(0, 0, 0, 0.0) 70%);
-  border-radius: 32px;
-}
-
-.splash-lockup {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: clamp(0px, 0.4vmin, 5px);
-}
-
-.splash-sfbbo {
-  position: absolute;
-  top: clamp(12px, 2.4vmin, 28px);
-  left: clamp(12px, 2.4vmin, 28px);
-  width: clamp(150px, 18vmin, 250px);
-  height: auto;
-  z-index: 2;
-  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.5));
-  border-radius: 16px;
-}
-
-.splash-logo {
-  width: clamp(520px, 68vmin, 900px);
-  filter: drop-shadow(0 12px 30px rgba(0, 0, 0, 0.6));
-}
-
-.splash-title {
-  width: clamp(320px, 50vmin, 680px);
-  margin-top: clamp(-14px, -1.6vmin, -4px);
-  filter: drop-shadow(0 6px 20px rgba(0, 0, 0, 0.6));
-}
-
-.splash-tagline {
-  font-size: clamp(0.95rem, 1.6vmin, 1.15rem);
-  color: var(--text);
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
-  margin: 0 0 8px;
+  background: linear-gradient(180deg, rgba(6, 19, 17, 0) 0%, rgba(6, 19, 17, 0.35) 22%, rgba(6, 19, 17, 0.82) 100%);
 }
 
 .splash-actions {
@@ -135,10 +98,11 @@ body {
 }
 
 .splash-best {
-  margin-top: 4px;
+  margin: 0;
   font-size: 0.95rem;
   color: var(--accent);
   text-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+  min-height: 1.2em;
 }
 
 /* ============== TUTORIAL ============== */
