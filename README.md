@@ -1,20 +1,28 @@
 # Birdle: Marsh Madness
 
-A static spotting-scope hidden-bird game for GitHub Pages. You have 60 seconds
-to find all 11 birds hidden across the marsh — they're tiny dots from this far
-away, so you'll need to drag the scope across the scene and identify each
-species the moment it appears in the eyepiece.
+A static installable spotting-scope hidden-bird game for GitHub Pages. You have
+60 seconds to find all 11 birds hidden across the marsh — they're tiny dots
+from this far away, so you'll need to drag the scope across the scene and
+identify each species once it appears in the eyepiece.
 
 ## How To Play
 
-1. **Splash → Start** — opens the tutorial on first run, otherwise jumps straight
-   into a round.
+1. **Splash → Start** — plays the optimized marsh intro video, then shows a
+   visual follow-along tutorial with one practice Mallard sighting.
 2. **Drag the spotting scope** across the marsh with mouse or touch. The
-   eyepiece magnifies whatever is under it.
-3. When a bird is centered in the eyepiece, the matching species button lights
-   up. Tap it to **log the sighting**. Wrong taps cost a miss.
-4. Find all 11 species before the 60-second timer expires. Faster runs save a
-   **best time** to local storage.
+   eyepiece magnifies whatever is under it, and the zoom controls let you move
+   between wide, standard, and close views.
+3. When a bird is centered in the eyepiece, make your best guess from the bird
+   buttons. Wrong taps cost a miss.
+4. Find all 11 species before the analog countdown timer expires. Faster runs
+   save a **best time** to local storage. Marsh ambience plays during each
+   round after the user starts the game.
+
+## PWA Install
+
+The app includes [manifest.webmanifest](manifest.webmanifest), [sw.js](sw.js),
+and generated icons in [assets](assets), so it can be installed from supported
+Android and iOS browsers after being served over HTTPS, such as GitHub Pages.
 
 ## Run Locally
 

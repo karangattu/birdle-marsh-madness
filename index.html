@@ -5,6 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>Birdle: Marsh Madness</title>
     <link rel="icon" type="image/png" href="assets/birdle_logo.png" />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="assets/apple-touch-icon.png" />
+    <meta name="theme-color" content="#06211b" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Birdle" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <link rel="stylesheet" href="src/styles.css" />
   </head>
   <body>
@@ -14,51 +20,69 @@
         <img class="splash-bg" src="assets/poster.png" alt="" />
         <img class="splash-sfbbo" src="assets/SFBBO_Logo_Rounded.png" alt="San Francisco Bay Bird Observatory" />
         <div class="splash-overlay">
-          <img class="splash-logo" src="assets/birdle_logo.png" alt="" />
-          <img class="splash-title" src="assets/marsh_madness_title.png" alt="Birdle: Marsh Madness" />
+          <div class="splash-lockup" aria-label="Birdle: Marsh Madness">
+            <img class="splash-logo" src="assets/birdle_logo.png" alt="Birdle" />
+            <img class="splash-title" src="assets/marsh_madness_title_trimmed.png" alt="Marsh Madness" />
+          </div>
           <p class="splash-tagline">A 60-second spotting-scope challenge in the marsh.</p>
           <div class="splash-actions">
-            <button id="splashStart" class="primary-action" type="button">Start</button>
-            <button id="splashHowTo" class="ghost-action" type="button">How to play</button>
+            <button id="splashStart" class="primary-action" type="button">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5a2 2 0 0 1 3-1.73l11 7a2 2 0 0 1 0 3.46l-11 7A2 2 0 0 1 5 19z" /></svg>
+              Start
+            </button>
+            <button id="splashHowTo" class="ghost-action" type="button">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" /><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" /><path d="M12 17h.01" /></svg>
+              How to play
+            </button>
           </div>
           <p class="splash-best" id="splashBest" hidden></p>
         </div>
       </section>
 
+      <!-- Intro -->
+      <section class="screen screen-intro" id="introScreen" aria-label="Marsh Madness intro" hidden>
+        <video id="introVideo" class="intro-video" src="assets/marsh_madness_intro_optimized.mp4" poster="assets/poster.png" muted playsinline preload="metadata"></video>
+        <div class="intro-shade"></div>
+        <button id="introSkip" class="intro-skip ghost-action" type="button">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 4 10 8-10 8V4Z" /><path d="M19 5v14" /></svg>
+          Skip
+        </button>
+      </section>
+
       <!-- Tutorial -->
       <section class="screen screen-tutorial" id="tutorialScreen" aria-label="How to play" hidden>
-        <div class="tutorial-card">
-          <h2>How to play</h2>
-          <ol class="tutorial-steps">
-            <li>
-              <span class="step-num">1</span>
-              <div>
-                <strong>Drag the spotting scope</strong> across the marsh. Birds are tiny dots from
-                this far away.
-              </div>
-            </li>
-            <li>
-              <span class="step-num">2</span>
-              <div>
-                When a bird sits inside the eyepiece, you'll see it <strong>magnified</strong> and
-                its name button will light up.
-              </div>
-            </li>
-            <li>
-              <span class="step-num">3</span>
-              <div>
-                Tap the lit-up button to <strong>log the sighting</strong>. Wrong taps cost you.
-              </div>
-            </li>
-            <li>
-              <span class="step-num">4</span>
-              <div>
-                Find <strong>all 11 birds in 60 seconds</strong>. Faster = bigger time bonus.
-              </div>
-            </li>
-          </ol>
+        <div class="tutorial-card visual-tutorial">
+          <h2>Try one sighting</h2>
+          <div class="tutorial-demo" id="tutorialDemo" role="application" aria-label="Practice dragging the eyepiece to the Mallard">
+            <img class="tutorial-demo-bg" src="assets/marsh_backdrop.png" alt="" />
+            <img class="tutorial-demo-bird" src="assets/mallard.png" alt="Mallard" />
+            <div class="tutorial-demo-scope" id="tutorialDemoScope"><div class="eyepiece-glare"></div></div>
+            <img class="tutorial-demo-tool" src="assets/looking_through_scope.png" alt="" />
+          </div>
+          <div class="tutorial-cues">
+            <div class="tutorial-cue">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2v20" /><path d="M2 12h20" /><path d="m19 15 3-3-3-3" /><path d="m5 9-3 3 3 3" /><path d="m15 5-3-3-3 3" /><path d="m9 19 3 3 3-3" /></svg>
+              Drag the scope
+            </div>
+            <div class="tutorial-cue">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></svg>
+              Find the bird in the eyepiece
+            </div>
+            <div class="tutorial-cue">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5" /></svg>
+              Guess from the buttons
+            </div>
+          </div>
+          <div class="tutorial-demo-buttons">
+            <button class="bird-button demo-button" id="demoMallardButton" type="button">Mallard</button>
+            <button class="bird-button demo-button dim" type="button">Great Egret</button>
+            <button class="bird-button demo-button dim" type="button">Song Sparrow</button>
+          </div>
           <div class="tutorial-actions">
-            <button id="tutorialStart" class="primary-action" type="button">I'm ready</button>
+            <button id="tutorialStart" class="primary-action" type="button">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5a2 2 0 0 1 3-1.73l11 7a2 2 0 0 1 0 3.46l-11 7A2 2 0 0 1 5 19z" /></svg>
+              Start round
+            </button>
             <button id="tutorialBack" class="ghost-action" type="button">Back</button>
           </div>
         </div>
@@ -69,8 +93,28 @@
         <header class="top-bar">
           <h1 class="brand-title">Birdle <span>:</span> Marsh Madness</h1>
           <div class="hud">
-            <div class="hud-meter">
-              <span>Time</span><strong id="timeRemaining">60</strong>
+            <div class="scope-tools" id="zoomControls" role="group" aria-label="Scope zoom">
+              <button class="zoom-button" type="button" data-zoom="2.8" aria-label="Wide scope zoom">
+                <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /><path d="M8 11h6" /></svg>
+                <span>2.8x</span>
+              </button>
+              <button class="zoom-button is-active" type="button" data-zoom="3.4" aria-label="Standard scope zoom">
+                <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></svg>
+                <span>3.4x</span>
+              </button>
+              <button class="zoom-button" type="button" data-zoom="4.2" aria-label="Close scope zoom">
+                <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /><path d="M11 8v6" /><path d="M8 11h6" /></svg>
+                <span>4.2x</span>
+              </button>
+            </div>
+            <div class="analog-timer" id="analogTimer" aria-label="60 seconds remaining">
+              <svg class="timer-dial" viewBox="0 0 100 100" aria-hidden="true">
+                <circle class="timer-track" cx="50" cy="50" r="43" pathLength="100" />
+                <circle class="timer-progress" cx="50" cy="50" r="43" pathLength="100" />
+                <line class="timer-hand" x1="50" y1="50" x2="50" y2="18" />
+                <circle class="timer-pin" cx="50" cy="50" r="3" />
+              </svg>
+              <strong id="timeRemaining">60</strong>
             </div>
             <div class="hud-meter">
               <span>Found</span><strong id="foundCount">0/0</strong>
@@ -104,7 +148,7 @@
         </div>
 
         <section class="controls-panel">
-          <div class="controls-actions">
+          <div class="controls-actions" hidden aria-hidden="true">
             <button id="restartButton" class="ghost-action" type="button">Restart round</button>
             <button id="howToButton" class="ghost-action" type="button">How to play</button>
           </div>
@@ -119,12 +163,17 @@
           <p class="result-stats" id="resultStats"></p>
           <p class="result-best" id="resultBest"></p>
           <div class="result-actions">
-            <button id="resultRestart" class="primary-action" type="button">Play again</button>
+            <button id="resultRestart" class="primary-action" type="button">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.64-6.36" /><path d="M21 3v6h-6" /></svg>
+              Play again
+            </button>
             <button id="resultHome" class="ghost-action" type="button">Home</button>
           </div>
         </div>
       </section>
     </main>
+
+    <audio id="gameAudio" src="assets/marsh_sounds.mp3" loop preload="auto"></audio>
 
     <script type="module" src="src/app.js"></script>
   </body>

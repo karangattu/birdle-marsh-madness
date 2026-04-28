@@ -16,6 +16,20 @@ const BIRDS = [
   { id: 'song_sparrow', name: 'Song Sparrow' },
 ];
 
+const ALL_BIRDS = [
+  { id: 'american_avocet', name: 'American Avocet' },
+  { id: 'american_coot', name: 'American Coot' },
+  { id: 'black-necked_stilt', name: 'Black-necked Stilt' },
+  { id: 'canada_goose', name: 'Canada Goose' },
+  { id: 'great_egret', name: 'Great Egret' },
+  { id: 'mallard', name: 'Mallard' },
+  { id: 'marsh_wren', name: 'Marsh Wren' },
+  { id: 'northern_shoveler', name: 'Northern Shoveler' },
+  { id: 'red-winged_blackbird', name: 'Red-winged Blackbird' },
+  { id: 'snowy_egret', name: 'Snowy Egret' },
+  { id: 'song_sparrow', name: 'Song Sparrow' },
+];
+
 function deterministicRandom(seed = 1) {
   let s = seed;
   return () => {
@@ -42,6 +56,24 @@ test('birds lower in the frame (closer to viewer) are larger than birds further 
   const placements = createPlacements(BIRDS, deterministicRandom(11));
   const sorted = [...placements].sort((a, b) => a.yPct - b.yPct);
   assert.ok(sorted[0].scale <= sorted[sorted.length - 1].scale);
+});
+
+test('all bird species are placed every round', () => {
+  const placements = createPlacements(ALL_BIRDS, deterministicRandom(15));
+  assert.equal(placements.length, ALL_BIRDS.length);
+  assert.deepEqual(
+    new Set(placements.map((p) => p.birdId)),
+    new Set(ALL_BIRDS.map((b) => b.id)),
+  );
+});
+
+test('birds stay in the distant marsh band and away from the scope art', () => {
+  const placements = createPlacements(ALL_BIRDS, deterministicRandom(21));
+  for (const placement of placements) {
+    assert.ok(placement.yPct >= 42, 'bird should not be in the sky');
+    assert.ok(placement.yPct <= 70, 'bird should stay farther from the viewer');
+    assert.ok(!(placement.xPct >= 72 && placement.yPct >= 40), 'bird should not sit under the scope art');
+  }
 });
 
 test('round length is one minute and starts with no birds found', () => {

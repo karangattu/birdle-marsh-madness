@@ -1,0 +1,25 @@
+{
+  "name": "Birdle: Marsh Madness",
+  "short_name": "Birdle",
+  "description": "A one-minute spotting-scope bird identification game set in the marsh.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#06211b",
+  "theme_color": "#06211b",
+  "icons": [
+    {
+      "src": "assets/pwa-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "assets/pwa-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

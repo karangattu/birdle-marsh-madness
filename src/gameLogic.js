@@ -8,12 +8,15 @@
 
 export const GAME_LENGTH_SECONDS = 60;
 
-// Bird placement bounds (percent of stage). The marsh horizon sits roughly at
-// ~32% from the top, so birds live in the band right around it.
+// Bird placement bounds (percent of stage). Keep birds in the far marsh band:
+// below the open sky, but not so close that the scope decoration covers them.
 const X_MIN = 6;
 const X_MAX = 94;
-const Y_MIN = 52;
-const Y_MAX = 82;
+const Y_MIN = 42;
+const Y_MAX = 70;
+
+const SCOPE_ART_X_MIN = 72;
+const SCOPE_ART_Y_MIN = 40;
 
 const SCALE_MIN = 0.78;
 const SCALE_MAX = 1.35;
@@ -31,22 +34,30 @@ export function createPlacements(birds, random = Math.random) {
     let attempts = 0;
     do {
       const yPct = Y_MIN + random() * (Y_MAX - Y_MIN);
+      let xPct = X_MIN + random() * (X_MAX - X_MIN);
+      if (xPct >= SCOPE_ART_X_MIN && yPct >= SCOPE_ART_Y_MIN) {
+        xPct = X_MIN + random() * (SCOPE_ART_X_MIN - X_MIN - 2);
+      }
       // Perspective: birds lower on the screen (closer to viewer) appear larger.
       const depth = (yPct - Y_MIN) / (Y_MAX - Y_MIN); // 0 = far, 1 = near
       const scale = SCALE_MIN + depth * (SCALE_MAX - SCALE_MIN);
       candidate = {
         birdId: bird.id,
-        xPct: X_MIN + random() * (X_MAX - X_MIN),
+        xPct,
         yPct,
         flip: random() < 0.5 ? -1 : 1,
         scale,
         bobDelayMs: 0,
       };
       attempts += 1;
-    } while (attempts < 25 && tooCloseToOthers(candidate, placements));
+    } while (attempts < 40 && (tooCloseToOthers(candidate, placements) || overlapsScopeArt(candidate)));
     placements.push(candidate);
   }
   return placements;
+}
+
+function overlapsScopeArt(candidate) {
+  return candidate.xPct >= SCOPE_ART_X_MIN && candidate.yPct >= SCOPE_ART_Y_MIN;
 }
 
 function tooCloseToOthers(candidate, placements) {
