@@ -1,4 +1,4 @@
-const CACHE_NAME = 'birdle-marsh-madness-v6';
+const CACHE_NAME = 'birdle-marsh-madness-v7';
 
 const APP_SHELL = [
   './',
@@ -20,6 +20,7 @@ const APP_SHELL = [
   './assets/american_coot.png',
   './assets/black-necked_stilt.png',
   './assets/canada_goose.png',
+  './assets/cinnamon_teal.png',
   './assets/great_egret.png',
   './assets/mallard.png',
   './assets/marsh_wren.png',

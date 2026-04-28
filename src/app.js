@@ -10,8 +10,9 @@ import {
 const BIRDS = [
   { id: 'american_avocet',       name: 'American Avocet', difficulty: 'medium' },
   { id: 'american_coot',         name: 'American Coot', difficulty: 'easy' },
-  { id: 'black-necked_stilt',    name: 'Black-necked Stilt', difficulty: 'medium' },
+  { id: 'black-necked_stilt',    name: 'Black-necked Stilt', difficulty: 'hard' },
   { id: 'canada_goose',          name: 'Canada Goose', difficulty: 'easy' },
+  { id: 'cinnamon_teal',         name: 'Cinnamon Teal', difficulty: 'medium' },
   { id: 'great_egret',           name: 'Great Egret', difficulty: 'easy' },
   { id: 'mallard',               name: 'Mallard', difficulty: 'easy' },
   { id: 'marsh_wren',            name: 'Marsh Wren', difficulty: 'hard' },
@@ -613,7 +614,7 @@ function showResultScreen() {
     if (prevBest != null) summaryLines.push(`Best time: ${prevBest}s`);
   }
   els.resultBest.textContent = summaryLines.join(' | ');
-  els.resultSupport.textContent = 'Help us in real life with surveys at SFBBO. Learn more at sfbbo.org.';
+  els.resultSupport.innerHTML = 'Want to support the real-world conservation work behind Birdle? Explore SFBBO surveys and field projects at <a href="https://sfbbo.org" target="_blank" rel="noreferrer">sfbbo.org</a>.';
 
   showScreen('result');
   refreshBestTimeLabel();

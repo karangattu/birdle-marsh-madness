@@ -13,6 +13,12 @@ test('tutorial exposes a draggable demo scope and a Mallard target button', () =
   assert.match(html, /id="demoMallardButton"/);
 });
 
+test('game catalog exposes 12 bird buttons including Cinnamon Teal', () => {
+  const birdEntries = appSource.match(/\{ id: '/g) ?? [];
+  assert.equal(birdEntries.length, 12);
+  assert.match(appSource, /cinnamon_teal/);
+});
+
 test('game uses a fixed 4.2x zoom and looping marsh ambience', () => {
   assert.doesNotMatch(html, /id="zoomControls"/);
   assert.match(appSource, /const DEFAULT_ZOOM = 4\.2;/);
@@ -32,6 +38,10 @@ test('tutorial screen includes looping background audio', () => {
 
 test('service worker caches the marsh ambience for installed play', () => {
   assert.match(serviceWorker, /assets\/marsh_sounds\.mp3/);
+});
+
+test('service worker caches the Cinnamon Teal art for installed play', () => {
+  assert.match(serviceWorker, /assets\/cinnamon_teal\.png/);
 });
 
 test('service worker caches the tutorial ambience for installed play', () => {
@@ -55,7 +65,7 @@ test('opening screen can show locally stored high score', () => {
 
 test('game over screen includes an SFBBO support line', () => {
   assert.match(html, /id="resultSupport"/);
-  assert.match(appSource, /Help us in real life with surveys at SFBBO\. Learn more at sfbbo\.org\./);
+  assert.match(appSource, /Want to support the real-world conservation work behind Birdle\? Explore SFBBO surveys and field projects at <a href="https:\/\/sfbbo\.org" target="_blank" rel="noreferrer">sfbbo\.org<\/a>\./);
 });
 
 test('game requests fullscreen when a session starts', () => {

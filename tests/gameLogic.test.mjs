@@ -21,6 +21,7 @@ const ALL_BIRDS = [
   { id: 'american_coot', name: 'American Coot' },
   { id: 'black-necked_stilt', name: 'Black-necked Stilt' },
   { id: 'canada_goose', name: 'Canada Goose' },
+  { id: 'cinnamon_teal', name: 'Cinnamon Teal' },
   { id: 'great_egret', name: 'Great Egret' },
   { id: 'mallard', name: 'Mallard' },
   { id: 'marsh_wren', name: 'Marsh Wren' },
