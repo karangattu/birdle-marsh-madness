@@ -80,8 +80,8 @@ test('all bird species are placed every round', () => {
 test('birds stay in the distant marsh band and away from the scope art', () => {
   const placements = createPlacements(ALL_BIRDS, deterministicRandom(21));
   for (const placement of placements) {
-    assert.ok(placement.yPct >= 42, 'bird should not be in the sky');
-    assert.ok(placement.yPct <= 70, 'bird should stay farther from the viewer');
+    assert.ok(placement.yPct >= 38, 'bird should not be in the sky');
+    assert.ok(placement.yPct <= 64, 'bird should stay farther from the viewer');
     assert.ok(!(placement.xPct >= 72 && placement.yPct >= 40), 'bird should not sit under the scope art');
   }
 });

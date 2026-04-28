@@ -11,7 +11,6 @@ test('tutorial exposes a draggable demo scope and a Mallard target button', () =
   assert.match(html, /id="tutorialDemo"/);
   assert.match(html, /id="tutorialDemoScope"/);
   assert.match(html, /id="demoMallardButton"/);
-  assert.match(html, /Game zoom:\s*<strong>4\.2x<\/strong>/);
 });
 
 test('game uses a fixed 4.2x zoom and looping marsh ambience', () => {
