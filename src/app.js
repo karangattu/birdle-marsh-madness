@@ -1,6 +1,7 @@
 import {
   GAME_LENGTH_SECONDS,
   createGameState,
+  createPlacements,
   recordGuess,
   score,
   tickGame,
@@ -67,6 +68,7 @@ const els = {
   tutorialAudio: $('tutorialAudio'),
   gameAudio: $('gameAudio'),
   birdButtons: $('birdButtons'),
+  scopeDecoration: document.querySelector('.scope-decoration'),
   restartButton: $('restartButton'),
   howToButton: $('howToButton'),
   resultTitle: $('resultTitle'),
@@ -224,12 +226,15 @@ function onBirdButtonClick(e) {
     flashFeedback(`Spotted: ${BIRDS.find((b) => b.id === id).name}!`, 'good');
     markBirdFound(id);
     playFoundCue();
+    vibrate([40, 30, 40]);
   } else if (result.reason === 'no-focus') {
     flashFeedback('Nothing in the eyepiece — keep scanning', 'bad');
+    vibrate(18);
   } else if (result.reason === 'already-found') {
     flashFeedback('Already logged', 'bad');
   } else if (result.reason === 'wrong-guess') {
     flashFeedback('Not quite — look closer', 'bad');
+    vibrate(18);
   }
   refreshHud();
   if (state.isOver) endRound();
@@ -443,8 +448,10 @@ function updateFocus() {
   }
 
   if (bestId !== focusedBirdId) {
+    const justAcquired = bestId !== null && focusedBirdId === null;
     focusedBirdId = bestId;
     els.eyepiece.classList.toggle('is-on-target', !!focusedBirdId);
+    if (justAcquired) vibrate(25);
   }
 }
 
@@ -477,6 +484,7 @@ function refreshHud() {
   els.analogTimer.classList.toggle('is-warn', state.remainingSeconds <= 10);
   if (state.remainingSeconds <= 10 && state.remainingSeconds > 0 && state.remainingSeconds !== previousRemaining) {
     playUrgencyCue(state.remainingSeconds);
+    vibrate(10);
   }
   if (state.remainingSeconds !== previousRemaining) {
     els.analogTimer.classList.add('is-tick');
@@ -595,6 +603,25 @@ function advanceFromIntro() {
   showScreen('tutorial');
 }
 
+// ---------------- Haptics ----------------
+function vibrate(pattern) {
+  navigator.vibrate?.(pattern);
+}
+
+// ---------------- Scope art bounds ----------------
+function computeScopeArtBounds() {
+  const stageR = els.marshStage.getBoundingClientRect();
+  const scopeR = els.scopeDecoration?.getBoundingClientRect();
+  if (!stageR.width || !stageR.height || !scopeR?.width || !scopeR?.height) {
+    return { xMin: 62, yMin: 40 };
+  }
+  // Measure where the decoration image starts as a % of the stage, with a
+  // 3% safety buffer so the bird exclusion zone slightly overlaps the image edge.
+  const xMin = Math.max(30, ((scopeR.left - stageR.left) / stageR.width) * 100 - 3);
+  const yMin = Math.max(20, ((scopeR.top - stageR.top) / stageR.height) * 100);
+  return { xMin, yMin };
+}
+
 // ---------------- Round lifecycle ----------------
 function startRound() {
   enterFullscreenMode();
@@ -605,7 +632,9 @@ function startRound() {
   }
   isRevealingMisses = false;
   showScreen('game');
-  state = createGameState({ birds: BIRDS, now: performance.now() });
+  const scopeBounds = computeScopeArtBounds();
+  const placements = createPlacements(BIRDS, Math.random, scopeBounds.xMin, scopeBounds.yMin);
+  state = createGameState({ birds: BIRDS, now: performance.now(), placements });
   scopePos = { x: 0.5, y: 0.45 };
   focusedBirdId = null;
   els.eyepiece.classList.remove('is-on-target');
@@ -644,6 +673,8 @@ function endRound() {
     cancelAnimationFrame(rafId);
     rafId = null;
   }
+
+  if (state.isWon) vibrate([60, 40, 100]);
 
   const missedIds = getMissedBirdIds();
   if (!state.isWon && missedIds.length > 0 && !isRevealingMisses) {

@@ -45,7 +45,12 @@ const SCOPE_ART_Y_MIN = 40;
 
 const DEFAULT_PROFILE = PLACEMENT_PROFILES.hard;
 
-export function createPlacements(birds, random = Math.random) {
+export function createPlacements(
+  birds,
+  random = Math.random,
+  scopeArtXMin = SCOPE_ART_X_MIN,
+  scopeArtYMin = SCOPE_ART_Y_MIN,
+) {
   if (!Array.isArray(birds) || birds.length === 0) {
     throw new Error('createPlacements requires a non-empty birds array');
   }
@@ -58,8 +63,8 @@ export function createPlacements(birds, random = Math.random) {
     do {
       const yPct = profile.yMin + random() * (profile.yMax - profile.yMin);
       let xPct = profile.xMin + random() * (profile.xMax - profile.xMin);
-      if (xPct >= SCOPE_ART_X_MIN && yPct >= SCOPE_ART_Y_MIN) {
-        xPct = profile.xMin + random() * (SCOPE_ART_X_MIN - profile.xMin - 2);
+      if (xPct >= scopeArtXMin && yPct >= scopeArtYMin) {
+        xPct = profile.xMin + random() * Math.max(scopeArtXMin - profile.xMin - 2, 0);
       }
       // Perspective: birds lower on the screen (closer to viewer) appear larger.
       const depth = (yPct - profile.yMin) / (profile.yMax - profile.yMin); // 0 = far, 1 = near
@@ -73,7 +78,11 @@ export function createPlacements(birds, random = Math.random) {
         bobDelayMs: Math.floor(random() * 2200),
       };
       attempts += 1;
-    } while (attempts < 40 && (tooCloseToOthers(candidate, placements, profile.minSpacingPct) || overlapsScopeArt(candidate)));
+    } while (
+      attempts < 40 &&
+      (tooCloseToOthers(candidate, placements, profile.minSpacingPct) ||
+        (candidate.xPct >= scopeArtXMin && candidate.yPct >= scopeArtYMin))
+    );
     placements.push(candidate);
   }
   return placements;
@@ -81,10 +90,6 @@ export function createPlacements(birds, random = Math.random) {
 
 function getPlacementProfile(bird) {
   return PLACEMENT_PROFILES[bird?.difficulty] ?? DEFAULT_PROFILE;
-}
-
-function overlapsScopeArt(candidate) {
-  return candidate.xPct >= SCOPE_ART_X_MIN && candidate.yPct >= SCOPE_ART_Y_MIN;
 }
 
 function tooCloseToOthers(candidate, placements, minSpacingPct) {
