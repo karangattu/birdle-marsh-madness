@@ -113,11 +113,19 @@
 
         <div class="orientation-guard" id="orientationGuard" role="status" aria-live="polite">
           <div class="orientation-guard-card">
-            <svg class="orientation-guard-icon" viewBox="0 0 64 64" aria-hidden="true">
-              <rect x="20" y="8" width="24" height="40" rx="5" ry="5" />
-              <path d="M24 18a14 14 0 0 1 24 8" />
-              <path d="M44 14h4v7" />
-              <path d="M48 21h-7" />
+            <svg class="orientation-guard-icon" viewBox="0 0 80 80" aria-hidden="true">
+              <g class="rotation-arc-group">
+                <path d="M 70 34 A 30 30 0 0 0 10 34" />
+                <path d="M 7 29 L 10 34 L 13 29" />
+              </g>
+              <g class="orientation-phone">
+                <rect x="28" y="12" width="24" height="44" rx="5" />
+                <rect x="35" y="15.5" width="10" height="3" rx="1.5" />
+                <rect x="31" y="20" width="18" height="29" rx="2" />
+                <rect x="36" y="53" width="8" height="1.5" rx="0.75" />
+                <line x1="31" y1="40" x2="49" y2="40" />
+                <path d="M 35 33 Q 37.5 30 40 32 Q 42.5 30 45 33" />
+              </g>
             </svg>
             <h2>Rotate to landscape</h2>
             <p>Birdle plays best with the marsh wide open. Turn your phone sideways to keep hunting.</p>
@@ -177,14 +185,22 @@
 
     <div class="global-orientation-lock" id="globalOrientationLock" role="status" aria-live="polite" aria-label="Landscape required">
       <div class="orientation-guard-card">
-        <svg class="orientation-guard-icon" viewBox="0 0 64 64" aria-hidden="true">
-          <rect x="20" y="8" width="24" height="40" rx="5" ry="5" />
-          <path d="M24 18a14 14 0 0 1 24 8" />
-          <path d="M44 14h4v7" />
-          <path d="M48 21h-7" />
+        <svg class="orientation-guard-icon" viewBox="0 0 80 80" aria-hidden="true">
+          <g class="rotation-arc-group">
+            <path d="M 70 34 A 30 30 0 0 0 10 34" />
+            <path d="M 7 29 L 10 34 L 13 29" />
+          </g>
+          <g class="orientation-phone">
+            <rect x="28" y="12" width="24" height="44" rx="5" />
+            <rect x="35" y="15.5" width="10" height="3" rx="1.5" />
+            <rect x="31" y="20" width="18" height="29" rx="2" />
+            <rect x="36" y="53" width="8" height="1.5" rx="0.75" />
+            <line x1="31" y1="40" x2="49" y2="40" />
+            <path d="M 35 33 Q 37.5 30 40 32 Q 42.5 30 45 33" />
+          </g>
         </svg>
         <h2>Rotate to landscape</h2>
-        <p>Birdle is locked to landscape on phones and tablets so controls stay reachable.</p>
+        <p>Birdle is best in landscape — turn your phone sideways to start birding.</p>
       </div>
     </div>
 

@@ -475,6 +475,8 @@ body {
 }
 
 .orientation-guard-card {
+  position: relative;
+  overflow: hidden;
   width: min(100%, 380px);
   padding: clamp(24px, 5vmin, 34px);
   border-radius: 28px;
@@ -486,31 +488,55 @@ body {
   animation: orientation-card-rise 520ms ease-out both;
 }
 
+.orientation-guard-card::before,
+.orientation-guard-card::after {
+  content: '';
+  position: absolute;
+  left: -28px;
+  background: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 26 13'><path d='M1 10 Q6.5 4 13 7 Q19.5 4 25 10' fill='none' stroke='%23f6c453' stroke-opacity='.3' stroke-width='2' stroke-linecap='round'/></svg>") no-repeat center / contain;
+  pointer-events: none;
+  animation: guard-bird-fly 9s linear infinite;
+}
+.orientation-guard-card::before { top: 18px; width: 26px; height: 13px; animation-delay: 1s; }
+.orientation-guard-card::after  { top: 34px; width: 19px; height: 10px; opacity: 0.65; animation-delay: 5.5s; }
+
 .orientation-guard-icon {
-  width: 88px;
-  height: 88px;
-  margin: 0 auto 14px;
+  width: 92px;
+  height: 92px;
+  margin: 0 auto 20px;
   display: block;
   color: var(--accent);
-  animation: orientation-tilt 2.1s ease-in-out infinite;
+  overflow: visible;
 }
 
 .orientation-guard-icon rect,
-.orientation-guard-icon path {
+.orientation-guard-icon path,
+.orientation-guard-icon line {
   fill: none;
   stroke: currentColor;
-  stroke-width: 3.2;
+  stroke-width: 3;
   stroke-linecap: round;
   stroke-linejoin: round;
 }
 
-.orientation-guard h2 {
+.rotation-arc-group path {
+  stroke-width: 2.5;
+  opacity: 0.5;
+}
+
+.orientation-phone {
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+  animation: orientation-rotate-phone 4s ease-in-out infinite;
+}
+
+.orientation-guard-card h2 {
   margin: 0 0 10px;
   font-size: clamp(1.35rem, 3.2vmin, 1.7rem);
   color: var(--accent);
 }
 
-.orientation-guard p {
+.orientation-guard-card p {
   margin: 0;
   color: var(--text-dim);
   line-height: 1.5;
@@ -1157,11 +1183,17 @@ body {
   to { transform: translateY(0) scale(1); opacity: 1; }
 }
 
-@keyframes orientation-tilt {
-  0%, 100% { transform: rotate(0deg) translateY(0); }
-  25% { transform: rotate(-6deg) translateY(-1px); }
-  50% { transform: rotate(0deg) translateY(0); }
-  75% { transform: rotate(6deg) translateY(-1px); }
+@keyframes orientation-rotate-phone {
+  0%, 14%   { transform: rotate(0deg); }
+  44%, 66%  { transform: rotate(-90deg); }
+  86%, 100% { transform: rotate(0deg); }
+}
+
+@keyframes guard-bird-fly {
+  0%   { transform: translate(0px, 0px);     opacity: 0; }
+  5%   { opacity: 1; }
+  90%  { opacity: 1; }
+  100% { transform: translate(430px, -14px); opacity: 0; }
 }
 
 /* Compact mobile landscape */

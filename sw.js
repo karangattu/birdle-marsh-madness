@@ -1,4 +1,4 @@
-const CACHE_NAME = 'birdle-marsh-madness-v10';
+const CACHE_NAME = 'birdle-marsh-madness-v11';
 
 const APP_SHELL = [
   './',
