@@ -111,6 +111,7 @@ body {
 .screen-tutorial {
   align-items: center;
   justify-content: center;
+  overflow-y: auto;
   background:
     radial-gradient(ellipse at top, rgba(246, 196, 83, 0.08) 0%, transparent 60%),
     linear-gradient(180deg, #07211c 0%, #061311 100%);
@@ -124,6 +125,8 @@ body {
   padding: clamp(24px, 4vmin, 40px);
   max-width: 560px;
   width: 100%;
+  max-height: calc(100dvh - clamp(16px, 4vmin, 40px) * 2);
+  overflow-y: auto;
   box-shadow: 0 30px 80px rgba(0, 0, 0, 0.55);
 }
 
@@ -418,6 +421,20 @@ body {
   position: absolute;
   inset: 0;
   z-index: 8;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(18px, 5vmin, 40px);
+  background:
+    radial-gradient(circle at top, rgba(246, 196, 83, 0.14) 0%, transparent 48%),
+    linear-gradient(180deg, rgba(6, 19, 17, 0.42) 0%, rgba(6, 19, 17, 0.88) 100%);
+  backdrop-filter: blur(14px);
+}
+
+.global-orientation-lock {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
   display: none;
   align-items: center;
   justify-content: center;
@@ -1136,7 +1153,11 @@ body {
   .hud-meter span { font-size: 0.6rem; }
   .hud-meter strong { font-size: 0.95rem; }
   .screen-tutorial { padding: 8px; }
-  .tutorial-card { padding: 12px; border-radius: 16px; }
+  .tutorial-card {
+    padding: 12px;
+    border-radius: 16px;
+    max-height: calc(100dvh - 16px);
+  }
   .tutorial-card h2 { margin-bottom: 8px; font-size: 1.1rem; }
   .tutorial-demo { min-height: 124px; border-radius: 12px; }
   .tutorial-demo-scope { width: 104px; height: 104px; }
@@ -1156,6 +1177,15 @@ body {
 
 /* Portrait/narrow fallback */
 @media (orientation: portrait) and (pointer: coarse) {
+  .global-orientation-lock {
+    display: flex;
+  }
+
+  .app {
+    pointer-events: none;
+    user-select: none;
+  }
+
   .orientation-guard {
     display: flex;
   }

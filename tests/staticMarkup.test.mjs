@@ -114,3 +114,10 @@ test('service worker no longer caches superseded source assets', () => {
   assert.doesNotMatch(serviceWorker, /birdle_logo\.png/);
   assert.doesNotMatch(serviceWorker, /SFBBO_Logo_Rounded\.png/);
 });
+
+test('portrait mode lock exists for touch devices and tutorial can scroll', () => {
+  assert.match(html, /id="globalOrientationLock"/);
+  assert.match(styles, /\.global-orientation-lock/);
+  assert.match(styles, /\.screen-tutorial\s*\{[\s\S]*overflow-y:\s*auto/);
+  assert.match(styles, /@media \(orientation: portrait\) and \(pointer: coarse\)[\s\S]*\.global-orientation-lock\s*\{[\s\S]*display:\s*flex/);
+});
