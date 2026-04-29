@@ -1,6 +1,6 @@
 {
-  "name": "Birdle: Marsh Madness",
-  "short_name": "Birdle",
+  "name": "Marsh Madness",
+  "short_name": "Marsh Madness",
   "description": "A one-minute spotting-scope bird identification game set in the marsh.",
   "start_url": "./",
   "scope": "./",
