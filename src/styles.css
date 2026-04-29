@@ -16,6 +16,8 @@
   --scope-y: 45%;
   --tutorial-scope-x: 24%;
   --tutorial-scope-y: 58%;
+  --tutorial-eyepiece-radius: clamp(70px, 10vmin, 110px);
+  --tutorial-magnify: 3.5;
 }
 
 * { box-sizing: border-box; }
@@ -221,42 +223,69 @@ body {
   position: absolute;
   left: var(--tutorial-scope-x);
   top: var(--tutorial-scope-y);
-  width: clamp(140px, 20vmin, 220px);
-  height: clamp(140px, 20vmin, 220px);
+  width: calc(var(--tutorial-eyepiece-radius) * 2);
+  height: calc(var(--tutorial-eyepiece-radius) * 2);
   border-radius: 50%;
   transform: translate(-50%, -50%);
   box-shadow:
-    0 0 0 5px rgba(0, 0, 0, 0.85),
-    0 0 0 12px rgba(20, 12, 4, 0.95),
-    0 0 0 17px rgba(246, 196, 83, 0.65),
-    0 0 65px 22px rgba(0, 0, 0, 0.45) inset,
-    0 0 50px rgba(246, 196, 83, 0.38);
+    0 0 0 4px rgba(0, 0, 0, 0.92),
+    0 0 0 12px rgba(15, 12, 9, 0.96),
+    0 0 0 17px rgba(80, 69, 50, 0.9),
+    0 0 0 20px rgba(246, 196, 83, 0.36),
+    0 0 90px 34px rgba(0, 0, 0, 0.58) inset,
+    0 30px 60px rgba(0, 0, 0, 0.6);
   pointer-events: auto;
   cursor: grab;
   touch-action: none;
-  transition: box-shadow 180ms ease, transform 180ms ease, filter 180ms ease;
-  z-index: 3;
+  transition: box-shadow 220ms ease, transform 180ms ease;
+  z-index: 5;
 }
 
 .tutorial-demo.is-dragging .tutorial-demo-scope { cursor: grabbing; }
 
 .tutorial-demo.is-on-target .tutorial-demo-scope {
-  transform: translate(-50%, -50%) scale(1.06);
+  transform: translate(-50%, -50%);
   box-shadow:
-    0 0 0 5px rgba(0, 0, 0, 0.88),
-    0 0 0 12px rgba(20, 12, 4, 0.95),
-    0 0 0 18px rgba(246, 196, 83, 0.82),
-    0 0 52px 18px rgba(0, 0, 0, 0.34) inset,
-    0 0 54px rgba(246, 196, 83, 0.46);
+    0 0 0 4px rgba(0, 0, 0, 0.92),
+    0 0 0 12px rgba(15, 12, 9, 0.96),
+    0 0 0 17px rgba(80, 69, 50, 0.9),
+    0 0 0 21px rgba(246, 196, 83, 0.68),
+    0 0 80px 28px rgba(0, 0, 0, 0.4) inset,
+    0 0 60px rgba(246, 196, 83, 0.4);
 }
 
-.tutorial-demo.is-on-target .tutorial-demo-scope::after {
+.tutorial-magnified-clip {
+  position: absolute;
+  inset: 0;
+  clip-path: circle(var(--tutorial-eyepiece-radius) at var(--tutorial-scope-x) var(--tutorial-scope-y));
+  -webkit-clip-path: circle(var(--tutorial-eyepiece-radius) at var(--tutorial-scope-x) var(--tutorial-scope-y));
+  pointer-events: none;
+  will-change: clip-path;
+  filter: saturate(1.15) contrast(1.08);
+  z-index: 3;
+}
+
+.tutorial-magnified-clip::after {
   content: '';
   position: absolute;
-  inset: -10%;
-  border-radius: 50%;
-  box-shadow: 0 0 0 0 rgba(246, 196, 83, 0.36);
+  inset: 0;
+  background:
+    radial-gradient(circle at var(--tutorial-scope-x) var(--tutorial-scope-y), rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.03) 28%, rgba(0, 0, 0, 0.35) 72%, rgba(0, 0, 0, 0.65) 100%),
+    repeating-radial-gradient(circle at var(--tutorial-scope-x) var(--tutorial-scope-y), rgba(255, 255, 255, 0.04) 0 1px, transparent 1px 9px);
   pointer-events: none;
+  mix-blend-mode: screen;
+}
+
+.tutorial-magnified-zoom {
+  position: absolute;
+  inset: 0;
+  transform: scale(var(--tutorial-magnify));
+  transform-origin: var(--tutorial-scope-x) var(--tutorial-scope-y);
+  will-change: transform;
+}
+
+.tutorial-magnified-zoom .tutorial-demo-bird {
+  width: var(--bird-size);
 }
 
 .tutorial-demo-tool {
@@ -1141,6 +1170,7 @@ body {
     --eyepiece-radius: clamp(56px, 12vmin, 90px);
     --magnify: 3.0;
     --bird-size: clamp(16px, 2.4vmin, 28px);
+    --tutorial-eyepiece-radius: 52px;
   }
   .top-bar { padding: 6px 12px; gap: 8px; }
   .brand-title { font-size: 0.85rem; }
@@ -1154,19 +1184,50 @@ body {
   .hud-meter strong { font-size: 0.95rem; }
   .screen-tutorial { padding: 8px; }
   .tutorial-card {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto auto auto;
+    column-gap: 12px;
     padding: 12px;
     border-radius: 16px;
     max-height: calc(100dvh - 16px);
   }
-  .tutorial-card h2 { margin-bottom: 8px; font-size: 1.1rem; }
-  .tutorial-demo { min-height: 124px; border-radius: 12px; }
+  .tutorial-card h2 {
+    grid-column: 2;
+    grid-row: 1;
+    margin-bottom: 6px;
+    font-size: 1.1rem;
+  }
+  .tutorial-demo {
+    grid-column: 1;
+    grid-row: 1 / -1;
+    aspect-ratio: auto;
+    min-height: 0;
+    border-radius: 12px;
+    align-self: stretch;
+  }
   .tutorial-demo-scope { width: 104px; height: 104px; }
   .tutorial-demo-tool { width: 170px; }
-  .tutorial-cues { gap: 6px; margin-top: 8px; }
-  .tutorial-cue { min-height: 34px; padding: 6px 8px; font-size: 0.74rem; }
-  .tutorial-demo-buttons { gap: 6px; margin-top: 8px; }
+  .tutorial-cues {
+    grid-column: 2;
+    grid-row: 2;
+    grid-template-columns: 1fr;
+    gap: 4px;
+    margin-top: 0;
+  }
+  .tutorial-cue { min-height: 30px; padding: 5px 8px; font-size: 0.74rem; }
+  .tutorial-demo-buttons {
+    grid-column: 2;
+    grid-row: 3;
+    gap: 6px;
+    margin-top: 6px;
+  }
   .demo-button { min-height: 34px; }
-  .tutorial-actions { margin-top: 10px; }
+  .tutorial-actions {
+    grid-column: 2;
+    grid-row: 4;
+    margin-top: 8px;
+  }
   .controls-panel { padding: 6px 10px 8px; gap: 6px; }
   .controls-actions { gap: 6px; }
   .ghost-action { padding: 6px 12px; font-size: 0.8rem; }
