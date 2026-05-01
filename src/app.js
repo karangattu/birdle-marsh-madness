@@ -1,7 +1,10 @@
 import {
   GAME_LENGTH_SECONDS,
+  GAME_MODE_LENGTH_SECONDS,
+  GAME_MODES,
   createGameState,
   createPlacements,
+  normalizeGameMode,
   recordGuess,
   score,
   tickGame,
@@ -23,11 +26,16 @@ const BIRDS = [
   { id: 'song_sparrow',          name: 'Song Sparrow', difficulty: 'hard' },
 ].map((b) => ({ ...b, image: `assets/${b.id}.png` }));
 
-const BEST_TIME_KEY = 'birdle:bestTimeSeconds';
-const HIGH_SCORE_KEY = 'birdle:highScore';
+const LEGACY_BEST_TIME_KEY = 'birdle:bestTimeSeconds';
+const LEGACY_HIGH_SCORE_KEY = 'birdle:highScore';
 const DEFAULT_ZOOM = 4.2;
 const MISSED_BIRD_REVEAL_MS = 4000;
 const TUTORIAL_TARGET = { x: 0.56, y: 0.55 };
+const GAME_MODE_ORDER = [GAME_MODES.standard, GAME_MODES.expert];
+const GAME_MODE_DETAILS = {
+  [GAME_MODES.standard]: { label: 'Standard', description: '60s round' },
+  [GAME_MODES.expert]: { label: 'Expert', description: '45s, smaller birds' },
+};
 
 const ICONS = {
   check: '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5" /></svg>',
@@ -48,12 +56,14 @@ const els = {
   splashStart: $('splashStart'),
   splashHowTo: $('splashHowTo'),
   splashBest: $('splashBest'),
+  modeButtons: Array.from(document.querySelectorAll('[data-game-mode]')),
   introVideo: $('introVideo'),
   introSkip: $('introSkip'),
   tutorialDemo: $('tutorialDemo'),
   tutorialDemoScope: $('tutorialDemoScope'),
   demoMallardButton: $('demoMallardButton'),
   tutorialStart: $('tutorialStart'),
+  tutorialSkip: $('tutorialSkip'),
   tutorialBack: $('tutorialBack'),
   marshStage: $('marshStage'),
   distantBirds: $('distantBirds'),
@@ -62,6 +72,7 @@ const els = {
   scopeHint: $('scopeHint'),
   feedback: $('feedback'),
   analogTimer: $('analogTimer'),
+  modeLabel: $('modeLabel'),
   timeRemaining: $('timeRemaining'),
   foundCount: $('foundCount'),
   misses: $('misses'),
@@ -69,6 +80,7 @@ const els = {
   gameAudio: $('gameAudio'),
   birdButtons: $('birdButtons'),
   scopeDecoration: document.querySelector('.scope-decoration'),
+  quitButton: $('quitButton'),
   restartButton: $('restartButton'),
   howToButton: $('howToButton'),
   resultTitle: $('resultTitle'),
@@ -84,6 +96,7 @@ const els = {
 // ---------------- Screen state ----------------
 let activeScreen = 'splash';
 let returnToScreenAfterTutorial = 'splash';
+let selectedMode = GAME_MODES.standard;
 
 function showScreen(name) {
   for (const [key, el] of Object.entries(screens)) {
@@ -108,6 +121,16 @@ function showScreen(name) {
   }
 }
 
+function setSelectedMode(mode) {
+  selectedMode = normalizeGameMode(mode);
+  for (const button of els.modeButtons) {
+    const isSelected = button.dataset.gameMode === selectedMode;
+    button.classList.toggle('is-selected', isSelected);
+    button.setAttribute('aria-pressed', String(isSelected));
+  }
+  refreshBestTimeLabel();
+}
+
 // ---------------- Game state ----------------
 let state = null;
 let rafId = null;
@@ -122,28 +145,39 @@ let currentZoom = DEFAULT_ZOOM;
 let tutorialScopePos = { x: 0.24, y: 0.58 };
 let tutorialPointerId = null;
 let tutorialPointerCaptureEl = null;
+let tutorialMallardClicked = false;
 let tutorialNudgeTimer = null;
 let missedRevealTimer = null;
 let isRevealingMisses = false;
-let lastHud = { remainingSeconds: GAME_LENGTH_SECONDS, foundCount: 0, misses: 0 };
+let lastHud = { remainingSeconds: GAME_MODE_LENGTH_SECONDS[GAME_MODES.standard], foundCount: 0, misses: 0 };
 let foundCueContext = null;
 
 // ---------------- Setup splash best-time ----------------
 function refreshBestTimeLabel() {
-  const best = readBest();
-  const highScore = readHighScore();
-  const parts = [`High score: ${highScore}`];
-  if (best != null) parts.push(`Best time: ${best}s`);
   els.splashBest.hidden = false;
-  els.splashBest.textContent = parts.join(' | ');
+  els.splashBest.innerHTML = renderScoreRecordsHtml(selectedMode);
 }
 
-function readBest() {
-  return readStoredNumber(BEST_TIME_KEY);
+function readBest(mode = GAME_MODES.standard) {
+  const gameMode = normalizeGameMode(mode);
+  const saved = readStoredNumber(getBestTimeKey(gameMode));
+  if (saved != null) return saved;
+  return gameMode === GAME_MODES.standard ? readStoredNumber(LEGACY_BEST_TIME_KEY) : null;
 }
 
-function readHighScore() {
-  return readStoredNumber(HIGH_SCORE_KEY) ?? 0;
+function readHighScore(mode = GAME_MODES.standard) {
+  const gameMode = normalizeGameMode(mode);
+  const saved = readStoredNumber(getHighScoreKey(gameMode));
+  if (saved != null) return saved;
+  return gameMode === GAME_MODES.standard ? (readStoredNumber(LEGACY_HIGH_SCORE_KEY) ?? 0) : 0;
+}
+
+function getBestTimeKey(mode) {
+  return `birdle:bestTimeSeconds:${normalizeGameMode(mode)}`;
+}
+
+function getHighScoreKey(mode) {
+  return `birdle:highScore:${normalizeGameMode(mode)}`;
 }
 
 function readStoredNumber(key) {
@@ -157,25 +191,40 @@ function readStoredNumber(key) {
   }
 }
 
-function writeBest(seconds) {
+function writeBest(seconds, mode = GAME_MODES.standard) {
   try {
-    localStorage.setItem(BEST_TIME_KEY, String(seconds));
+    localStorage.setItem(getBestTimeKey(mode), String(seconds));
   } catch {
     /* ignore */
   }
 }
 
-function writeHighScoreIfBetter(points) {
-  const saved = readStoredNumber(HIGH_SCORE_KEY);
-  const previous = saved ?? 0;
+function writeHighScoreIfBetter(points, mode = GAME_MODES.standard) {
+  const gameMode = normalizeGameMode(mode);
+  const previous = readHighScore(gameMode);
   const nextScore = Math.max(0, points);
-  if (saved != null && nextScore <= previous) return { highScore: previous, isNew: false };
+  if (nextScore <= previous) return { highScore: previous, isNew: false };
   try {
-    localStorage.setItem(HIGH_SCORE_KEY, String(nextScore));
+    localStorage.setItem(getHighScoreKey(gameMode), String(nextScore));
   } catch {
     return { highScore: previous, isNew: false };
   }
   return { highScore: nextScore, isNew: nextScore > previous };
+}
+
+function getModeDetail(mode) {
+  return GAME_MODE_DETAILS[normalizeGameMode(mode)];
+}
+
+function renderScoreRecordsHtml(activeMode = selectedMode) {
+  return GAME_MODE_ORDER.map((mode) => {
+    const detail = getModeDetail(mode);
+    const highScore = readHighScore(mode);
+    const best = readBest(mode);
+    const isSelected = normalizeGameMode(activeMode) === mode;
+    const bestText = best == null ? 'No win yet' : `Best ${best}s`;
+    return `<span class="score-record${isSelected ? ' is-selected' : ''}"><span class="record-mode">${detail.label}</span><strong>${highScore}</strong><span>${bestText}</span></span>`;
+  }).join('');
 }
 
 // ---------------- Bird DOM rendering ----------------
@@ -310,10 +359,18 @@ function attachStageListeners() {
 // ---------------- Tutorial demo ----------------
 function resetTutorialDemo() {
   if (!els.tutorialDemo) return;
+  tutorialMallardClicked = false;
   tutorialScopePos = { x: 0.24, y: 0.58 };
   els.tutorialDemo.classList.remove('is-on-target', 'is-dragging', 'needs-target');
   els.demoMallardButton.classList.remove('is-highlighted', 'is-found');
+  setTutorialStartEnabled(false);
   applyTutorialScopeStyle();
+}
+
+function setTutorialStartEnabled(enabled) {
+  els.tutorialStart.disabled = !enabled;
+  els.tutorialStart.setAttribute('aria-disabled', String(!enabled));
+  els.tutorialStart.classList.toggle('is-disabled', !enabled);
 }
 
 function applyTutorialScopeStyle() {
@@ -383,7 +440,9 @@ function onDemoMallardClick() {
     tutorialNudgeTimer = setTimeout(() => els.tutorialDemo.classList.remove('needs-target'), 700);
     return;
   }
+  tutorialMallardClicked = true;
   els.demoMallardButton.classList.add('is-found');
+  setTutorialStartEnabled(true);
 }
 
 function attachTutorialDemoListeners() {
@@ -474,14 +533,16 @@ function refreshHud() {
   const previousMisses = lastHud.misses;
   const nextFound = state.foundIds.size;
   const nextMisses = state.misses;
+  const roundLengthSeconds = state.roundLengthSeconds ?? GAME_LENGTH_SECONDS;
 
   els.timeRemaining.textContent = String(state.remainingSeconds);
-  const elapsedSeconds = GAME_LENGTH_SECONDS - state.remainingSeconds;
-  const progress = state.remainingSeconds / GAME_LENGTH_SECONDS;
+  const elapsedSeconds = roundLengthSeconds - state.remainingSeconds;
+  const progress = state.remainingSeconds / roundLengthSeconds;
   els.analogTimer.style.setProperty('--timer-progress', progress.toFixed(3));
-  els.analogTimer.style.setProperty('--timer-hand-angle', `${(elapsedSeconds / GAME_LENGTH_SECONDS) * 360}deg`);
+  els.analogTimer.style.setProperty('--timer-hand-angle', `${(elapsedSeconds / roundLengthSeconds) * 360}deg`);
   els.analogTimer.setAttribute('aria-label', `${state.remainingSeconds} seconds remaining`);
   els.analogTimer.classList.toggle('is-warn', state.remainingSeconds <= 10);
+  els.analogTimer.classList.toggle('is-expert', state.mode === GAME_MODES.expert);
   if (state.remainingSeconds <= 10 && state.remainingSeconds > 0 && state.remainingSeconds !== previousRemaining) {
     playUrgencyCue(state.remainingSeconds);
     vibrate(10);
@@ -623,7 +684,9 @@ function computeScopeArtBounds() {
 }
 
 // ---------------- Round lifecycle ----------------
-function startRound() {
+function startRound(mode = selectedMode) {
+  const gameMode = normalizeGameMode(mode);
+  const modeDetail = getModeDetail(gameMode);
   enterFullscreenMode();
   pauseTutorialAmbience(true);
   if (missedRevealTimer) {
@@ -632,9 +695,10 @@ function startRound() {
   }
   isRevealingMisses = false;
   showScreen('game');
+  els.modeLabel.textContent = `${modeDetail.label} · ${GAME_MODE_LENGTH_SECONDS[gameMode]}s`;
   const scopeBounds = computeScopeArtBounds();
-  const placements = createPlacements(BIRDS, Math.random, scopeBounds.xMin, scopeBounds.yMin);
-  state = createGameState({ birds: BIRDS, now: performance.now(), placements });
+  const placements = createPlacements(BIRDS, Math.random, scopeBounds.xMin, scopeBounds.yMin, gameMode);
+  state = createGameState({ birds: BIRDS, now: performance.now(), placements, mode: gameMode });
   scopePos = { x: 0.5, y: 0.45 };
   focusedBirdId = null;
   els.eyepiece.classList.remove('is-on-target');
@@ -645,6 +709,7 @@ function startRound() {
   renderBirdLayers();
   renderBirdButtons();
   setZoom(currentZoom);
+  lastHud = { remainingSeconds: state.roundLengthSeconds, foundCount: 0, misses: 0 };
   refreshHud();
   playMarshAmbience();
 
@@ -705,36 +770,62 @@ function revealMissedBirds(missedIds) {
   flashFeedback('Birds you missed are marked in the marsh', 'bad');
 }
 
+function quitRoundToHome() {
+  if (rafId) {
+    cancelAnimationFrame(rafId);
+    rafId = null;
+  }
+  if (missedRevealTimer) {
+    clearTimeout(missedRevealTimer);
+    missedRevealTimer = null;
+  }
+  if (pointerGrabId != null) {
+    try { els.marshStage.releasePointerCapture?.(pointerGrabId); } catch { /* ignore */ }
+    pointerGrabId = null;
+  }
+  state = null;
+  focusedBirdId = null;
+  isDragging = false;
+  isRevealingMisses = false;
+  els.marshStage.classList.remove('is-dragging', 'is-revealing-misses');
+  els.eyepiece.classList.remove('is-on-target', 'is-confirmed');
+  els.feedback.classList.remove('is-visible', 'is-good', 'is-bad');
+  refreshBestTimeLabel();
+  showScreen('splash');
+}
+
 function showResultScreen() {
   const finalScore = score(state);
-  const highScore = writeHighScoreIfBetter(finalScore);
+  const mode = normalizeGameMode(state.mode);
+  const modeDetail = getModeDetail(mode);
+  const highScore = writeHighScoreIfBetter(finalScore, mode);
   const won = state.isWon;
   const tier = scoreTierFor(finalScore);
-  els.resultTitle.textContent = won ? `You spotted them all — ${tier.label}` : tier.label;
-  const seconds = won ? state.finishedSeconds : GAME_LENGTH_SECONDS;
+  els.resultTitle.textContent = won ? `${modeDetail.label}: You spotted them all — ${tier.label}` : `${modeDetail.label}: ${tier.label}`;
+  const seconds = won ? state.finishedSeconds : (state.roundLengthSeconds ?? GAME_LENGTH_SECONDS);
   els.resultStats.innerHTML = won
-    ? `Found <strong>${state.foundIds.size}/${BIRDS.length}</strong> in <strong>${seconds}s</strong> with <strong>${state.misses}</strong> misses.<br>Score: <strong>${finalScore}</strong>`
-    : `Found <strong>${state.foundIds.size}/${BIRDS.length}</strong> birds with <strong>${state.misses}</strong> misses.<br>Score: <strong>${finalScore}</strong>`;
+    ? `Found <strong>${state.foundIds.size}/${BIRDS.length}</strong> in <strong>${seconds}s</strong> with <strong>${state.misses}</strong> misses.<br>${modeDetail.label} score: <strong>${finalScore}</strong>`
+    : `Found <strong>${state.foundIds.size}/${BIRDS.length}</strong> birds with <strong>${state.misses}</strong> misses.<br>${modeDetail.label} score: <strong>${finalScore}</strong>`;
 
-  const summaryLines = [highScore.isNew ? `New high score: ${highScore.highScore}!` : `High score: ${highScore.highScore}`];
+  const summaryLines = [highScore.isNew ? `New ${modeDetail.label} high score: ${highScore.highScore}!` : `${modeDetail.label} high score: ${highScore.highScore}`];
   if (won) {
-    const prevBest = readBest();
+    const prevBest = readBest(mode);
     if (prevBest == null || seconds < prevBest) {
-      writeBest(seconds);
-      summaryLines.push(`New best time: ${seconds}s!`);
+      writeBest(seconds, mode);
+      summaryLines.push(`New ${modeDetail.label} best time: ${seconds}s!`);
     } else {
-      summaryLines.push(`Best time: ${prevBest}s`);
+      summaryLines.push(`${modeDetail.label} best time: ${prevBest}s`);
     }
   } else {
-    const prevBest = readBest();
-    if (prevBest != null) summaryLines.push(`Best time: ${prevBest}s`);
+    const prevBest = readBest(mode);
+    if (prevBest != null) summaryLines.push(`${modeDetail.label} best time: ${prevBest}s`);
   }
-  els.resultBest.textContent = summaryLines.join(' | ');
+  els.resultBest.innerHTML = `<span class="result-current-record">${summaryLines.join(' | ')}</span><span class="score-records compact">${renderScoreRecordsHtml(mode)}</span>`;
   els.resultCompare.textContent = `Rank: ${tier.label}`;
   const pointsFromHighScore = Math.max(0, highScore.highScore - finalScore);
   els.resultProgress.textContent = pointsFromHighScore === 0
-    ? 'You are at the high score.'
-    : `You are ${pointsFromHighScore} points from the high score.`;
+    ? `You are at the ${modeDetail.label} high score.`
+    : `You are ${pointsFromHighScore} points from the ${modeDetail.label} high score.`;
   els.resultSupport.innerHTML = 'Want to support the real-world conservation work behind Birdle? Explore SFBBO surveys and field projects at <a href="https://sfbbo.org" target="_blank" rel="noreferrer">sfbbo.org</a>.';
 
   showScreen('result');
@@ -756,8 +847,12 @@ function init() {
   renderBirdButtons();
   attachStageListeners();
   attachTutorialDemoListeners();
-  refreshBestTimeLabel();
-  lastHud = { remainingSeconds: GAME_LENGTH_SECONDS, foundCount: 0, misses: 0 };
+  setSelectedMode(GAME_MODES.standard);
+  lastHud = { remainingSeconds: GAME_MODE_LENGTH_SECONDS[GAME_MODES.standard], foundCount: 0, misses: 0 };
+
+  for (const button of els.modeButtons) {
+    button.addEventListener('click', () => setSelectedMode(button.dataset.gameMode));
+  }
 
   els.splashStart.addEventListener('click', () => {
     returnToScreenAfterTutorial = 'splash';
@@ -770,13 +865,23 @@ function init() {
   els.introVideo.addEventListener('ended', advanceFromIntro);
   els.introVideo.addEventListener('error', advanceFromIntro);
   els.introSkip.addEventListener('click', advanceFromIntro);
-  els.tutorialStart.addEventListener('click', () => startRound());
+  els.tutorialStart.addEventListener('click', () => {
+    if (!tutorialMallardClicked) {
+      els.tutorialDemo.classList.add('needs-target');
+      if (tutorialNudgeTimer) clearTimeout(tutorialNudgeTimer);
+      tutorialNudgeTimer = setTimeout(() => els.tutorialDemo.classList.remove('needs-target'), 700);
+      return;
+    }
+    startRound();
+  });
+  els.tutorialSkip.addEventListener('click', () => startRound());
   els.tutorialBack.addEventListener('click', () => showScreen(returnToScreenAfterTutorial));
 
   els.howToButton.addEventListener('click', () => {
     returnToScreenAfterTutorial = 'game';
     showScreen('tutorial');
   });
+  els.quitButton.addEventListener('click', quitRoundToHome);
   els.restartButton.addEventListener('click', () => startRound());
   els.resultRestart.addEventListener('click', () => beginGameSequence());
   els.resultHome.addEventListener('click', () => showScreen('splash'));

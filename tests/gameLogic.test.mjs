@@ -3,6 +3,8 @@ import test from 'node:test';
 
 import {
   GAME_LENGTH_SECONDS,
+  GAME_MODE_LENGTH_SECONDS,
+  GAME_MODES,
   createGameState,
   createPlacements,
   recordGuess,
@@ -69,6 +71,16 @@ test('difficulty tiers make easy birds larger and lower than hard birds', () => 
   assert.ok(easy.scale > medium.scale && medium.scale > hard.scale);
 });
 
+test('expert placements are smaller and higher than standard placements', () => {
+  const random = () => 0.5;
+  const birds = [{ id: 'mallard', difficulty: 'easy' }];
+  const standard = createPlacements(birds, random)[0];
+  const expert = createPlacements(birds, random, undefined, undefined, GAME_MODES.expert)[0];
+
+  assert.ok(expert.yPct < standard.yPct);
+  assert.ok(expert.scale < standard.scale);
+});
+
 test('all bird species are placed every round', () => {
   const placements = createPlacements(ALL_BIRDS, deterministicRandom(15));
   assert.equal(placements.length, ALL_BIRDS.length);
@@ -90,11 +102,21 @@ test('birds stay in the distant marsh band and away from the scope art', () => {
 test('round length is one minute and starts with no birds found', () => {
   const state = createGameState({ birds: BIRDS, now: 1000 });
   assert.equal(GAME_LENGTH_SECONDS, 60);
+  assert.equal(state.mode, GAME_MODES.standard);
+  assert.equal(state.roundLengthSeconds, GAME_MODE_LENGTH_SECONDS[GAME_MODES.standard]);
   assert.equal(state.remainingSeconds, 60);
   assert.equal(state.isOver, false);
   assert.equal(state.isWon, false);
   assert.equal(state.foundIds.size, 0);
   assert.equal(state.misses, 0);
+});
+
+test('expert round uses a shorter timer', () => {
+  const state = createGameState({ birds: BIRDS, now: 1000, mode: GAME_MODES.expert });
+  assert.equal(GAME_MODE_LENGTH_SECONDS[GAME_MODES.expert], 45);
+  assert.equal(state.mode, GAME_MODES.expert);
+  assert.equal(state.roundLengthSeconds, 45);
+  assert.equal(state.remainingSeconds, 45);
 });
 
 test('tapping a bird name with nothing in the eyepiece counts as a miss', () => {
@@ -143,6 +165,14 @@ test('time runs out and ends the round without a win', () => {
   assert.equal(state.remainingSeconds, 0);
   assert.equal(state.isOver, true);
   assert.equal(state.isWon, false);
+});
+
+test('expert timer ends after its shorter round length', () => {
+  const state = createGameState({ birds: BIRDS, now: 10_000, mode: GAME_MODES.expert });
+  tickGame(state, 55_000);
+  assert.equal(state.remainingSeconds, 0);
+  assert.equal(state.isOver, true);
+  assert.equal(state.finishedSeconds, 45);
 });
 
 test('scoring rewards finds and time bonus, penalizes misses', () => {

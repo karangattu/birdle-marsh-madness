@@ -19,6 +19,16 @@
       <section class="screen screen-splash is-active" id="splashScreen" aria-label="Splash screen">
         <img class="splash-poster" src="assets/marsh_madness_poster.png" alt="Birdle: Marsh Madness poster" />
         <div class="splash-bottom-bar">
+          <div class="mode-selector" role="group" aria-label="Choose game mode">
+            <button id="standardModeButton" class="mode-button is-selected" type="button" data-game-mode="standard" aria-pressed="true">
+              <span>Standard</span>
+              <small>60s round</small>
+            </button>
+            <button id="expertModeButton" class="mode-button" type="button" data-game-mode="expert" aria-pressed="false">
+              <span>Expert</span>
+              <small>45s, smaller birds</small>
+            </button>
+          </div>
           <div class="splash-actions" aria-label="Start or learn the game">
             <button id="splashStart" class="primary-action" type="button">
               <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5a2 2 0 0 1 3-1.73l11 7a2 2 0 0 1 0 3.46l-11 7A2 2 0 0 1 5 19z" /></svg>
@@ -79,10 +89,11 @@
             <button class="bird-button demo-button dim" type="button">Song Sparrow</button>
           </div>
           <div class="tutorial-actions">
-            <button id="tutorialStart" class="primary-action" type="button">
+            <button id="tutorialStart" class="primary-action" type="button" disabled aria-disabled="true">
               <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5a2 2 0 0 1 3-1.73l11 7a2 2 0 0 1 0 3.46l-11 7A2 2 0 0 1 5 19z" /></svg>
               Start round
             </button>
+            <button id="tutorialSkip" class="ghost-action" type="button">Skip tutorial</button>
             <button id="tutorialBack" class="ghost-action" type="button">Back</button>
           </div>
         </div>
@@ -91,7 +102,10 @@
       <!-- Game -->
       <section class="screen screen-game" id="gameScreen" aria-label="Game in progress" hidden>
         <header class="top-bar">
-          <h1 class="brand-title">Marsh Madness</h1>
+          <div class="title-lockup">
+            <h1 class="brand-title">Marsh Madness</h1>
+            <span class="mode-pill" id="modeLabel">Standard · 60s</span>
+          </div>
           <div class="hud">
             <div class="analog-timer" id="analogTimer" aria-label="60 seconds remaining">
               <svg class="timer-dial" viewBox="0 0 100 100" aria-hidden="true">
@@ -109,6 +123,10 @@
               <span>Misses</span><strong id="misses">0</strong>
             </div>
           </div>
+          <button id="quitButton" class="ghost-action game-quit-button" type="button" aria-label="Quit round and return home">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
+            Quit
+          </button>
         </header>
 
         <div class="orientation-guard" id="orientationGuard" role="status" aria-live="polite">

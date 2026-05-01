@@ -13,6 +13,23 @@ test('tutorial exposes a draggable demo scope and a Mallard target button', () =
   assert.match(html, /id="demoMallardButton"/);
 });
 
+test('tutorial requires the Mallard interaction unless skipped', () => {
+  assert.match(html, /id="tutorialStart"[^>]*disabled/);
+  assert.match(html, /id="tutorialSkip"/);
+  assert.match(appSource, /tutorialMallardClicked\s*=\s*false/);
+  assert.match(appSource, /setTutorialStartEnabled\(false\)/);
+  assert.match(appSource, /setTutorialStartEnabled\(true\)/);
+  assert.match(appSource, /tutorialSkip\.addEventListener\('click', \(\) => startRound\(\)\)/);
+});
+
+test('splash screen lets players choose standard or expert mode', () => {
+  assert.match(html, /data-game-mode="standard"/);
+  assert.match(html, /data-game-mode="expert"/);
+  assert.match(html, /45s, smaller birds/);
+  assert.match(appSource, /GAME_MODE_ORDER\s*=\s*\[GAME_MODES\.standard, GAME_MODES\.expert\]/);
+  assert.match(appSource, /setSelectedMode/);
+});
+
 test('game catalog exposes 12 bird buttons including Cinnamon Teal', () => {
   const birdEntries = appSource.match(/\{ id: '/g) ?? [];
   assert.equal(birdEntries.length, 12);
@@ -55,8 +72,10 @@ test('missed birds are revealed for four seconds before results', () => {
 });
 
 test('opening screen can show locally stored high score', () => {
-  assert.match(appSource, /HIGH_SCORE_KEY\s*=\s*'birdle:highScore'/);
-  assert.match(appSource, /High score:/);
+  assert.match(appSource, /LEGACY_HIGH_SCORE_KEY\s*=\s*'birdle:highScore'/);
+  assert.match(appSource, /birdle:highScore:\$\{normalizeGameMode\(mode\)\}/);
+  assert.match(appSource, /renderScoreRecordsHtml/);
+  assert.match(styles, /\.score-record/);
   assert.match(html, /src="assets\/marsh_madness_poster\.png"/);
   assert.doesNotMatch(html, /splash-sfbbo/);
   assert.doesNotMatch(html, /splash-logo/);
@@ -72,7 +91,17 @@ test('result screen includes payoff and progress lines', () => {
   assert.match(html, /id="resultCompare"/);
   assert.match(html, /id="resultProgress"/);
   assert.match(appSource, /Rank:/);
-  assert.match(appSource, /You are .* points from the high score\./);
+  assert.match(appSource, /points from the \$\{modeDetail\.label\} high score\./);
+  assert.match(appSource, /New \$\{modeDetail\.label\} high score/);
+});
+
+test('game screen can quit an active round back to the home screen', () => {
+  assert.match(html, /id="quitButton"/);
+  assert.match(html, /Quit round and return home/);
+  assert.match(appSource, /function quitRoundToHome\(\)/);
+  assert.match(appSource, /cancelAnimationFrame\(rafId\)/);
+  assert.match(appSource, /state\s*=\s*null/);
+  assert.match(appSource, /showScreen\('splash'\)/);
 });
 
 test('game plays an audible countdown during the last ten seconds', () => {

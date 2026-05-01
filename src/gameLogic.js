@@ -7,6 +7,14 @@
 //  - finding all birds wins; the timer runs out otherwise
 
 export const GAME_LENGTH_SECONDS = 60;
+export const GAME_MODES = {
+  standard: 'standard',
+  expert: 'expert',
+};
+export const GAME_MODE_LENGTH_SECONDS = {
+  [GAME_MODES.standard]: GAME_LENGTH_SECONDS,
+  [GAME_MODES.expert]: 45,
+};
 
 // Bird placement bounds (percent of stage). Keep birds in the far marsh band:
 // below the open sky, but not so close that the scope decoration covers them.
@@ -44,20 +52,25 @@ const SCOPE_ART_X_MIN = 72;
 const SCOPE_ART_Y_MIN = 40;
 
 const DEFAULT_PROFILE = PLACEMENT_PROFILES.hard;
+const EXPERT_Y_SHIFT = -5;
+const EXPERT_SCALE_FACTOR = 0.86;
+const EXPERT_SPACING_FACTOR = 0.88;
 
 export function createPlacements(
   birds,
   random = Math.random,
   scopeArtXMin = SCOPE_ART_X_MIN,
   scopeArtYMin = SCOPE_ART_Y_MIN,
+  mode = GAME_MODES.standard,
 ) {
   if (!Array.isArray(birds) || birds.length === 0) {
     throw new Error('createPlacements requires a non-empty birds array');
   }
 
+  const gameMode = normalizeGameMode(mode);
   const placements = [];
   for (const bird of birds) {
-    const profile = getPlacementProfile(bird);
+    const profile = getPlacementProfile(bird, gameMode);
     let candidate;
     let attempts = 0;
     do {
@@ -88,8 +101,17 @@ export function createPlacements(
   return placements;
 }
 
-function getPlacementProfile(bird) {
-  return PLACEMENT_PROFILES[bird?.difficulty] ?? DEFAULT_PROFILE;
+function getPlacementProfile(bird, mode = GAME_MODES.standard) {
+  const profile = PLACEMENT_PROFILES[bird?.difficulty] ?? DEFAULT_PROFILE;
+  if (mode !== GAME_MODES.expert) return profile;
+  return {
+    ...profile,
+    yMin: Math.max(32, profile.yMin + EXPERT_Y_SHIFT),
+    yMax: Math.max(42, profile.yMax + EXPERT_Y_SHIFT),
+    scaleMin: profile.scaleMin * EXPERT_SCALE_FACTOR,
+    scaleMax: profile.scaleMax * EXPERT_SCALE_FACTOR,
+    minSpacingPct: profile.minSpacingPct * EXPERT_SPACING_FACTOR,
+  };
 }
 
 function tooCloseToOthers(candidate, placements, minSpacingPct) {
@@ -101,15 +123,19 @@ function tooCloseToOthers(candidate, placements, minSpacingPct) {
   return false;
 }
 
-export function createGameState({ birds, now = Date.now(), placements } = {}) {
+export function createGameState({ birds, now = Date.now(), placements, mode = GAME_MODES.standard } = {}) {
   if (!Array.isArray(birds) || birds.length === 0) {
     throw new Error('createGameState requires at least one bird');
   }
+  const gameMode = normalizeGameMode(mode);
+  const roundLengthSeconds = GAME_MODE_LENGTH_SECONDS[gameMode];
   return {
     birds,
-    placements: placements ?? createPlacements(birds),
+    placements: placements ?? createPlacements(birds, Math.random, SCOPE_ART_X_MIN, SCOPE_ART_Y_MIN, gameMode),
+    mode: gameMode,
+    roundLengthSeconds,
     startedAt: now,
-    remainingSeconds: GAME_LENGTH_SECONDS,
+    remainingSeconds: roundLengthSeconds,
     isOver: false,
     isWon: false,
     foundIds: new Set(),
@@ -121,11 +147,12 @@ export function createGameState({ birds, now = Date.now(), placements } = {}) {
 
 export function tickGame(state, now = Date.now()) {
   if (state.isOver) return state;
+  const roundLengthSeconds = getRoundLengthSeconds(state);
   const elapsed = Math.max(0, Math.floor((now - state.startedAt) / 1000));
-  state.remainingSeconds = Math.max(0, GAME_LENGTH_SECONDS - elapsed);
+  state.remainingSeconds = Math.max(0, roundLengthSeconds - elapsed);
   if (state.remainingSeconds === 0) {
     state.isOver = true;
-    state.finishedSeconds = GAME_LENGTH_SECONDS;
+    state.finishedSeconds = roundLengthSeconds;
   }
   return state;
 }
@@ -152,7 +179,7 @@ export function recordGuess(state, guessedBirdId, focusedBirdId, now = Date.now(
       state.isWon = true;
       state.isOver = true;
       const elapsed = Math.max(0, Math.floor((now - state.startedAt) / 1000));
-      state.finishedSeconds = Math.min(GAME_LENGTH_SECONDS, elapsed);
+      state.finishedSeconds = Math.min(getRoundLengthSeconds(state), elapsed);
     }
     return { correct: true, bird };
   }
@@ -170,4 +197,12 @@ export function score(state) {
   const timeBonus = state.isWon ? state.remainingSeconds * 10 : 0;
   const missPenalty = state.misses * 15;
   return Math.max(0, base + timeBonus - missPenalty);
+}
+
+export function normalizeGameMode(mode) {
+  return mode === GAME_MODES.expert ? GAME_MODES.expert : GAME_MODES.standard;
+}
+
+function getRoundLengthSeconds(state) {
+  return state.roundLengthSeconds ?? GAME_MODE_LENGTH_SECONDS[normalizeGameMode(state.mode)];
 }
