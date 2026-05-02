@@ -67,12 +67,6 @@ const els = {
   modeButtons: Array.from(document.querySelectorAll('[data-game-mode]')),
   regularModeBest: $('regularModeBest'),
   expertModeBest: $('expertModeBest'),
-  splashLeaderboardRegular: $('splashLeaderboardRegular'),
-  splashLeaderboardRegularList: $('splashLeaderboardRegularList'),
-  splashLeaderboardRegularStatus: $('splashLeaderboardRegularStatus'),
-  splashLeaderboardExpert: $('splashLeaderboardExpert'),
-  splashLeaderboardExpertList: $('splashLeaderboardExpertList'),
-  splashLeaderboardExpertStatus: $('splashLeaderboardExpertStatus'),
   introVideo: $('introVideo'),
   introSkip: $('introSkip'),
   tutorialDemo: $('tutorialDemo'),
@@ -162,19 +156,6 @@ function setSelectedMode(mode) {
     button.setAttribute('aria-pressed', String(isSelected));
   }
   refreshBestTimeLabel();
-  syncSplashLeaderboardSelection();
-}
-
-function syncSplashLeaderboardSelection() {
-  const activeMode = normalizeGameMode(selectedMode);
-  for (const mode of GAME_MODE_ORDER) {
-    const slot = getLeaderboardSlot('splash', mode);
-    if (!slot?.panel) continue;
-    const isActive = normalizeGameMode(mode) === activeMode;
-    slot.panel.hidden = !isActive;
-    slot.panel.classList.toggle('is-active', isActive);
-    slot.panel.setAttribute('aria-hidden', String(!isActive));
-  }
 }
 
 // ---------------- Game state ----------------
@@ -342,11 +323,6 @@ async function saveLeaderboardScore(entry) {
   if (!response.ok) throw new Error(`Leaderboard save failed: ${response.status}`);
 }
 
-function refreshAllLeaderboards() {
-  for (const mode of GAME_MODE_ORDER) {
-    refreshLeaderboard(mode, ['splash']);
-  }
-}
 
 async function refreshLeaderboard(mode, targets) {
   for (const target of targets) {
@@ -429,20 +405,6 @@ function getLeaderboardSlot(target, mode) {
       modeLabel: els.resultLeaderboardMode,
     };
   }
-  if (gameMode === GAME_MODES.standard) {
-    return {
-      panel: els.splashLeaderboardRegular,
-      list: els.splashLeaderboardRegularList,
-      status: els.splashLeaderboardRegularStatus,
-    };
-  }
-  if (gameMode === GAME_MODES.expert) {
-    return {
-      panel: els.splashLeaderboardExpert,
-      list: els.splashLeaderboardExpertList,
-      status: els.splashLeaderboardExpertStatus,
-    };
-  }
   return null;
 }
 
@@ -480,7 +442,6 @@ async function prepareLeaderboardNameEntry(finalScore, seconds, won, mode = stat
     if (requestId !== leaderboardNameRequestId || activeScreen !== 'result') return;
     leaderboardCache.set(gameMode, entries);
     renderLeaderboard('result', gameMode, entries);
-    renderLeaderboard('splash', gameMode, entries);
   } catch {
     if (requestId !== leaderboardNameRequestId || activeScreen !== 'result') return;
     renderLeaderboard('result', gameMode, leaderboardCache.get(gameMode) ?? []);
@@ -565,7 +526,7 @@ async function submitLeaderboardName(event) {
     els.leaderboardNameForm.classList.add('is-saved');
     els.leaderboardNameStatus.textContent = 'Saved to the Top 5.';
     els.leaderboardNameSubmit.textContent = 'Saved';
-    await refreshLeaderboard(gameMode, ['result', 'splash']);
+    await refreshLeaderboard(gameMode, ['result']);
   } catch {
     els.leaderboardNameForm.classList.remove('is-saving');
     els.leaderboardNameSubmit.disabled = false;
@@ -1249,11 +1210,6 @@ function init() {
   for (const button of els.modeButtons) {
     button.addEventListener('click', () => setSelectedMode(button.dataset.gameMode));
   }
-
-  for (const mode of GAME_MODE_ORDER) {
-    renderLeaderboard('splash', mode);
-  }
-  refreshAllLeaderboards();
 
   els.splashStart.addEventListener('click', () => {
     returnToScreenAfterTutorial = 'splash';

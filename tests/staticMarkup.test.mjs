@@ -83,15 +83,11 @@ test('opening screen can show locally stored high score', () => {
   assert.doesNotMatch(html, /splash-title/);
 });
 
-test('opening screen shows regular and expert leaderboard previews', () => {
+test('opening screen shows regular and expert mode buttons', () => {
   assert.match(html, /id="modeRegular"/);
   assert.match(html, /id="modeExpert"/);
-  assert.match(html, /id="splashLeaderboardRegular"/);
-  assert.match(html, /id="splashLeaderboardExpert"/);
   assert.match(appSource, /leaderboardMode: 'regular'/);
   assert.match(appSource, /leaderboardMode: 'expert'/);
-  assert.match(appSource, /function syncSplashLeaderboardSelection\(/);
-  assert.match(styles, /\.splash-leaderboard-panel\.is-active/);
 });
 
 test('result screen includes a top five leaderboard panel', () => {
