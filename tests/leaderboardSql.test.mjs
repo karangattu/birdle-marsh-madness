@@ -15,6 +15,7 @@ test('leaderboard SQL creates the public marsh madness table', async () => {
   assert.match(sql, /create table if not exists public\.marsh_madness_leaderboard/);
   assert.match(sql, /mode text not null/);
   assert.match(sql, /check \(mode in \('regular', 'expert'\)\)/);
+  assert.match(sql, /player_label text not null default 'Marsh Birder'/);
   assert.match(sql, /score integer not null/);
   assert.match(sql, /found_count integer not null/);
   assert.match(sql, /total_birds integer not null/);
@@ -28,8 +29,18 @@ test('leaderboard SQL enables public read and insert policies for anon clients',
   assert.match(sql, /alter table public\.marsh_madness_leaderboard enable row level security/);
   assert.match(sql, /for select\s+to anon\s+using \(true\)/);
   assert.match(sql, /for insert\s+to anon\s+with check/);
+  assert.match(sql, /char_length\(btrim\(player_label\)\) between 1 and 40/);
   assert.match(sql, /score >= 0/);
   assert.match(sql, /mode in \('regular', 'expert'\)/);
+});
+
+test('leaderboard SQL upgrades existing tables with player labels', async () => {
+  const sql = await readLeaderboardSql();
+  assert.match(sql, /alter table public\.marsh_madness_leaderboard\s+add column if not exists player_label text/);
+  assert.match(sql, /update public\.marsh_madness_leaderboard\s+set player_label = case/);
+  assert.match(sql, /when player_label is null or char_length\(btrim\(player_label\)\) = 0 then 'Marsh Birder'/);
+  assert.match(sql, /else left\(btrim\(player_label\), 40\)/);
+  assert.match(sql, /alter column player_label set not null/);
 });
 
 test('leaderboard SQL adds a top-score lookup index', async () => {

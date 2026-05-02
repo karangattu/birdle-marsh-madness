@@ -210,6 +210,18 @@
           <p class="result-compare" id="resultCompare"></p>
           <p class="result-progress" id="resultProgress"></p>
           <p class="result-support" id="resultSupport"></p>
+          <form class="leaderboard-name-form" id="leaderboardNameForm" hidden>
+            <div class="leaderboard-name-copy">
+              <span class="leaderboard-name-kicker">Leaderboard</span>
+              <label id="leaderboardNameTitle" for="leaderboardPlayerName">Top 5 score</label>
+              <p id="leaderboardNameHelp">Save your score to the leaderboard.</p>
+            </div>
+            <div class="leaderboard-name-controls">
+              <input id="leaderboardPlayerName" name="playerName" type="text" maxlength="40" autocomplete="name" placeholder="Your name" aria-describedby="leaderboardNameHelp leaderboardNameStatus" />
+              <button id="leaderboardNameSubmit" class="primary-action" type="submit">Save score</button>
+            </div>
+            <p class="leaderboard-name-status" id="leaderboardNameStatus" aria-live="polite"></p>
+          </form>
           <section class="leaderboard-panel result-leaderboard" id="resultLeaderboard" aria-labelledby="resultLeaderboardTitle">
             <div class="leaderboard-heading">
               <h2 id="resultLeaderboardTitle">Top 5</h2>

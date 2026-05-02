@@ -4,6 +4,7 @@ import {
   GAME_MODES,
   createGameState,
   createPlacements,
+  isTopLeaderboardScore,
   normalizeGameMode,
   recordGuess,
   score,
@@ -35,6 +36,7 @@ const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_B2pz5WTA3UEVUeKACIgmBw_8_r0S3kU
 const LEADERBOARD_TABLE = 'marsh_madness_leaderboard';
 const DEFAULT_ZOOM = 4.2;
 const LEADERBOARD_LIMIT = 5;
+const PLAYER_LABEL_MAX_LENGTH = 40;
 const MISSED_BIRD_REVEAL_MS = 4000;
 const TUTORIAL_TARGET = { x: 0.56, y: 0.55 };
 const GAME_MODE_ORDER = [GAME_MODES.standard, GAME_MODES.expert];
@@ -107,6 +109,12 @@ const els = {
   resultLeaderboardList: $('resultLeaderboardList'),
   resultLeaderboardStatus: $('resultLeaderboardStatus'),
   resultLeaderboardMode: $('resultLeaderboardMode'),
+  leaderboardNameForm: $('leaderboardNameForm'),
+  leaderboardNameTitle: $('leaderboardNameTitle'),
+  leaderboardNameHelp: $('leaderboardNameHelp'),
+  leaderboardPlayerName: $('leaderboardPlayerName'),
+  leaderboardNameSubmit: $('leaderboardNameSubmit'),
+  leaderboardNameStatus: $('leaderboardNameStatus'),
   resultRestart: $('resultRestart'),
   resultHome: $('resultHome'),
 };
@@ -176,6 +184,8 @@ let missedRevealTimer = null;
 let isRevealingMisses = false;
 let lastHud = { remainingSeconds: GAME_MODE_LENGTH_SECONDS[GAME_MODES.standard], foundCount: 0, misses: 0 };
 let foundCueContext = null;
+let pendingLeaderboardEntry = null;
+let leaderboardNameRequestId = 0;
 
 // ---------------- Setup splash best-time ----------------
 function refreshBestTimeLabel() {
@@ -428,11 +438,11 @@ function setLeaderboardStatus(target, mode, text) {
   slot.status.hidden = text === '';
 }
 
-async function submitLeaderboardScore(finalScore, seconds, won, mode = state.mode) {
+function makeLeaderboardEntryPayload(finalScore, seconds, won, mode, playerLabel) {
   const gameMode = normalizeGameMode(mode);
-  const entry = {
+  return {
     mode: leaderboardModeForGameMode(gameMode),
-    player_label: getPlayerLabel(),
+    player_label: playerLabel,
     score: finalScore,
     found_count: state.foundIds.size,
     total_birds: state.birds.length,
@@ -440,25 +450,138 @@ async function submitLeaderboardScore(finalScore, seconds, won, mode = state.mod
     finished_seconds: won ? seconds : null,
     is_won: won,
   };
-
-  setLeaderboardStatus('result', gameMode, 'Saving score');
-  try {
-    await saveLeaderboardScore(entry);
-  } catch {
-    setLeaderboardStatus('result', gameMode, 'Score saved locally');
-  }
-  await refreshLeaderboard(gameMode, ['result', 'splash']);
 }
 
-function getPlayerLabel() {
+async function prepareLeaderboardNameEntry(finalScore, seconds, won, mode = state.mode) {
+  const gameMode = normalizeGameMode(mode);
+  const entry = makeLeaderboardEntryPayload(finalScore, seconds, won, gameMode, '');
+  resetLeaderboardNameForm();
+  const requestId = ++leaderboardNameRequestId;
+  setLeaderboardStatus('result', gameMode, 'Checking Top 5');
+
+  let entries;
   try {
-    const saved = localStorage.getItem(PLAYER_LABEL_KEY);
-    if (saved) return saved;
-    const label = `Marsh Birder ${Math.floor(1000 + Math.random() * 9000)}`;
-    localStorage.setItem(PLAYER_LABEL_KEY, label);
-    return label;
+    entries = await fetchLeaderboard(gameMode);
+    if (requestId !== leaderboardNameRequestId || activeScreen !== 'result') return;
+    leaderboardCache.set(gameMode, entries);
+    renderLeaderboard('result', gameMode, entries);
+    renderLeaderboard('splash', gameMode, entries);
   } catch {
-    return 'Marsh Birder';
+    if (requestId !== leaderboardNameRequestId || activeScreen !== 'result') return;
+    renderLeaderboard('result', gameMode, leaderboardCache.get(gameMode) ?? []);
+    setLeaderboardStatus('result', gameMode, 'Leaderboard unavailable');
+    return;
+  }
+
+  if (!isTopLeaderboardScore(finalScore, entries, LEADERBOARD_LIMIT)) {
+    setLeaderboardStatus('result', gameMode, topFiveCutoffText(entries));
+    return;
+  }
+
+  pendingLeaderboardEntry = entry;
+  showLeaderboardNameForm(gameMode, finalScore);
+}
+
+function topFiveCutoffText(entries) {
+  const topScores = Array.isArray(entries)
+    ? entries.map((entry) => Number.parseInt(entry.score, 10)).filter((entryScore) => Number.isFinite(entryScore))
+    : [];
+  if (topScores.length < LEADERBOARD_LIMIT) return '';
+  const cutoff = [...topScores].sort((a, b) => b - a)[LEADERBOARD_LIMIT - 1];
+  return `Top 5 starts above ${cutoff} points`;
+}
+
+function showLeaderboardNameForm(mode, finalScore) {
+  const gameMode = normalizeGameMode(mode);
+  const modeLabel = getModeDetail(gameMode).label;
+  els.leaderboardNameTitle.textContent = `${modeLabel} Top 5 score`;
+  els.leaderboardNameHelp.textContent = `Save ${finalScore} points to the ${modeLabel} leaderboard.`;
+  els.leaderboardPlayerName.value = readPlayerLabel();
+  els.leaderboardNameStatus.textContent = '';
+  els.leaderboardNameSubmit.disabled = false;
+  els.leaderboardNameSubmit.textContent = 'Save score';
+  els.leaderboardNameForm.hidden = false;
+  els.leaderboardNameForm.classList.remove('is-saving', 'is-saved');
+  setLeaderboardStatus('result', gameMode, '');
+  requestAnimationFrame(() => els.leaderboardPlayerName.focus({ preventScroll: true }));
+}
+
+function resetLeaderboardNameForm() {
+  leaderboardNameRequestId += 1;
+  pendingLeaderboardEntry = null;
+  els.leaderboardNameForm.hidden = true;
+  els.leaderboardNameForm.classList.remove('is-saving', 'is-saved');
+  els.leaderboardNameStatus.textContent = '';
+  els.leaderboardNameSubmit.disabled = false;
+  els.leaderboardNameSubmit.textContent = 'Save score';
+}
+
+async function submitLeaderboardName(event) {
+  event.preventDefault();
+  if (!pendingLeaderboardEntry) return;
+
+  const playerLabel = normalizePlayerLabel(els.leaderboardPlayerName.value);
+  if (!playerLabel) {
+    els.leaderboardNameStatus.textContent = 'Enter a name for the leaderboard.';
+    els.leaderboardPlayerName.focus();
+    return;
+  }
+
+  const gameMode = gameModeForLeaderboardMode(pendingLeaderboardEntry.mode);
+  els.leaderboardNameForm.classList.add('is-saving');
+  els.leaderboardNameSubmit.disabled = true;
+  els.leaderboardNameSubmit.textContent = 'Saving';
+  els.leaderboardNameStatus.textContent = 'Confirming your Top 5 spot.';
+
+  try {
+    const latestEntries = await fetchLeaderboard(gameMode);
+    leaderboardCache.set(gameMode, latestEntries);
+    if (!isTopLeaderboardScore(pendingLeaderboardEntry.score, latestEntries, LEADERBOARD_LIMIT)) {
+      renderLeaderboard('result', gameMode, latestEntries);
+      setLeaderboardStatus('result', gameMode, 'This score just missed the Top 5');
+      resetLeaderboardNameForm();
+      return;
+    }
+
+    await saveLeaderboardScore({ ...pendingLeaderboardEntry, player_label: playerLabel });
+    writePlayerLabel(playerLabel);
+    pendingLeaderboardEntry = null;
+    els.leaderboardNameForm.classList.remove('is-saving');
+    els.leaderboardNameForm.classList.add('is-saved');
+    els.leaderboardNameStatus.textContent = 'Saved to the Top 5.';
+    els.leaderboardNameSubmit.textContent = 'Saved';
+    await refreshLeaderboard(gameMode, ['result', 'splash']);
+  } catch {
+    els.leaderboardNameForm.classList.remove('is-saving');
+    els.leaderboardNameSubmit.disabled = false;
+    els.leaderboardNameSubmit.textContent = 'Try again';
+    els.leaderboardNameStatus.textContent = 'Could not save right now. Please try again.';
+  }
+}
+
+function gameModeForLeaderboardMode(leaderboardMode) {
+  return leaderboardMode === GAME_MODE_DETAILS[GAME_MODES.expert].leaderboardMode
+    ? GAME_MODES.expert
+    : GAME_MODES.standard;
+}
+
+function normalizePlayerLabel(value) {
+  return value.trim().replace(/\s+/g, ' ').slice(0, PLAYER_LABEL_MAX_LENGTH);
+}
+
+function readPlayerLabel() {
+  try {
+    return normalizePlayerLabel(localStorage.getItem(PLAYER_LABEL_KEY) ?? '');
+  } catch {
+    return '';
+  }
+}
+
+function writePlayerLabel(label) {
+  try {
+    localStorage.setItem(PLAYER_LABEL_KEY, label);
+  } catch {
+    /* ignore */
   }
 }
 
@@ -1087,7 +1210,7 @@ function showResultScreen() {
 
   showScreen('result');
   refreshBestTimeLabel();
-  submitLeaderboardScore(finalScore, seconds, won, mode);
+  prepareLeaderboardNameEntry(finalScore, seconds, won, mode);
 }
 
 function scoreTierFor(scoreValue) {
@@ -1146,6 +1269,7 @@ function init() {
   });
   els.quitButton.addEventListener('click', quitRoundToHome);
   els.restartButton.addEventListener('click', () => beginGameSequence());
+  els.leaderboardNameForm.addEventListener('submit', submitLeaderboardName);
   els.resultRestart.addEventListener('click', () => beginGameSequence());
   els.resultHome.addEventListener('click', () => showScreen('splash'));
 

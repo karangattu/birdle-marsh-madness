@@ -1349,27 +1349,30 @@ body {
   align-items: center;
   justify-content: center;
   background:
-    radial-gradient(ellipse at top, rgba(105, 210, 125, 0.1) 0%, transparent 60%),
-    linear-gradient(180deg, #07211c 0%, #061311 100%);
+    linear-gradient(180deg, rgba(246, 196, 83, 0.08) 0%, rgba(246, 196, 83, 0) 38%),
+    linear-gradient(180deg, #08241f 0%, #061311 100%);
   padding: clamp(16px, 4vmin, 40px);
+  overflow-y: auto;
 }
 
 .result-card {
-  background: var(--panel-strong);
-  border: 1px solid rgba(246, 196, 83, 0.3);
-  border-radius: 24px;
-  padding: clamp(24px, 4vmin, 40px);
-  max-width: 560px;
+  background:
+    linear-gradient(180deg, rgba(16, 52, 44, 0.97), rgba(7, 24, 20, 0.97));
+  border: 1px solid rgba(246, 196, 83, 0.26);
+  border-radius: 20px;
+  padding: clamp(22px, 3.4vmin, 34px);
+  max-width: 680px;
   width: 100%;
   text-align: center;
-  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.55);
+  box-shadow: 0 28px 74px rgba(0, 0, 0, 0.52), inset 0 1px 0 rgba(255, 255, 255, 0.06);
   animation: result-card-rise 480ms ease-out both;
 }
 
 .result-card h2 {
   margin: 0 0 12px;
-  font-size: clamp(1.6rem, 3vmin, 2.2rem);
+  font-size: clamp(1.45rem, 2.7vmin, 2rem);
   color: var(--accent);
+  line-height: 1.12;
 }
 
 .result-stats {
@@ -1408,16 +1411,126 @@ body {
 }
 
 .result-support {
-  margin: -8px 0 18px;
+  margin: 0 0 18px;
+  padding: 11px 13px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.06);
   color: var(--text-dim);
   font-size: 0.92rem;
-  line-height: 1.4;
+  line-height: 1.45;
+}
+
+.result-support a {
+  color: #ffe08a;
+  font-weight: 800;
+  text-decoration-color: rgba(255, 224, 138, 0.62);
+  text-underline-offset: 3px;
+}
+
+.result-support a:hover {
+  color: #fff4c4;
+  text-decoration-color: currentColor;
+}
+
+.leaderboard-name-form {
+  margin: 0 0 18px;
+  padding: 14px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(240px, 0.9fr);
+  align-items: center;
+  gap: 14px;
+  border-radius: 16px;
+  border: 1px solid rgba(246, 196, 83, 0.34);
+  background:
+    linear-gradient(135deg, rgba(246, 196, 83, 0.13), rgba(255, 255, 255, 0.04)),
+    rgba(6, 19, 17, 0.42);
+  text-align: left;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.leaderboard-name-form[hidden] { display: none; }
+
+.leaderboard-name-copy {
+  display: grid;
+  gap: 3px;
+}
+
+.leaderboard-name-kicker {
+  color: var(--accent);
+  font-size: 0.68rem;
+  font-weight: 850;
+  letter-spacing: 0.9px;
+  text-transform: uppercase;
+}
+
+.leaderboard-name-copy label {
+  color: var(--text);
+  font-size: 1.05rem;
+  font-weight: 850;
+  line-height: 1.2;
+}
+
+.leaderboard-name-copy p,
+.leaderboard-name-status {
+  margin: 0;
+  color: var(--text-dim);
+  font-size: 0.82rem;
+  line-height: 1.35;
+}
+
+.leaderboard-name-controls {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.leaderboard-name-controls input {
+  width: 100%;
+  min-height: 46px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.94);
+  color: #10231f;
+  font: inherit;
+  font-size: 0.95rem;
+  padding: 10px 12px;
+  outline: none;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.12);
+}
+
+.leaderboard-name-controls input:focus {
+  border-color: rgba(246, 196, 83, 0.9);
+  box-shadow: 0 0 0 3px rgba(246, 196, 83, 0.22), inset 0 1px 2px rgba(0, 0, 0, 0.12);
+}
+
+.leaderboard-name-controls .primary-action {
+  min-height: 46px;
+  padding: 10px 16px;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+.leaderboard-name-status {
+  grid-column: 1 / -1;
+  min-height: 1.2em;
+}
+
+.leaderboard-name-form.is-saved {
+  border-color: rgba(105, 210, 125, 0.48);
+}
+
+.leaderboard-name-form.is-saved .leaderboard-name-status {
+  color: var(--good);
 }
 
 .result-leaderboard {
   margin: 0 0 18px;
-  padding-top: 14px;
-  border-top: 1px solid rgba(246, 196, 83, 0.22);
+  padding: 14px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  background: rgba(6, 19, 17, 0.38);
 }
 
 .result-leaderboard .leaderboard-heading {

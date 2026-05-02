@@ -3,7 +3,7 @@ create extension if not exists pgcrypto with schema extensions;
 create table if not exists public.marsh_madness_leaderboard (
   id uuid primary key default gen_random_uuid(),
   mode text not null check (mode in ('regular', 'expert')),
-  player_label text not null default 'Marsh Birder' check (char_length(player_label) between 1 and 40),
+  player_label text not null default 'Marsh Birder' check (char_length(btrim(player_label)) between 1 and 40),
   score integer not null check (score >= 0 and score <= 100000),
   found_count integer not null check (found_count >= 0),
   total_birds integer not null check (total_birds > 0 and total_birds <= 64),
@@ -13,6 +13,26 @@ create table if not exists public.marsh_madness_leaderboard (
   created_at timestamp with time zone not null default now(),
   check (found_count <= total_birds)
 );
+
+alter table public.marsh_madness_leaderboard
+add column if not exists player_label text;
+
+update public.marsh_madness_leaderboard
+set player_label = case
+  when player_label is null or char_length(btrim(player_label)) = 0 then 'Marsh Birder'
+  else left(btrim(player_label), 40)
+end;
+
+alter table public.marsh_madness_leaderboard
+alter column player_label set default 'Marsh Birder',
+alter column player_label set not null;
+
+alter table public.marsh_madness_leaderboard
+drop constraint if exists marsh_madness_leaderboard_player_label_check;
+
+alter table public.marsh_madness_leaderboard
+add constraint marsh_madness_leaderboard_player_label_check
+check (char_length(btrim(player_label)) between 1 and 40);
 
 alter table public.marsh_madness_leaderboard enable row level security;
 
@@ -32,7 +52,7 @@ for insert
 to anon
 with check (
   mode in ('regular', 'expert')
-  and char_length(player_label) between 1 and 40
+  and char_length(btrim(player_label)) between 1 and 40
   and score >= 0
   and score <= 100000
   and found_count >= 0

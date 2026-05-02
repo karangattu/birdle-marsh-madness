@@ -100,6 +100,15 @@ test('result screen includes a top five leaderboard panel', () => {
   assert.match(appSource, /renderLeaderboard\('result'/);
 });
 
+test('result screen asks qualifying top-five players for their leaderboard name', () => {
+  assert.match(html, /id="leaderboardNameForm"/);
+  assert.match(html, /id="leaderboardPlayerName"/);
+  assert.match(html, /maxlength="40"/);
+  assert.match(appSource, /isTopLeaderboardScore\(finalScore/);
+  assert.match(appSource, /submitLeaderboardName/);
+  assert.doesNotMatch(appSource, /submitLeaderboardScore\(finalScore, seconds, won, mode\);/);
+});
+
 test('app saves and fetches leaderboard scores through Supabase REST', () => {
   assert.match(appSource, /SUPABASE_URL\s*=\s*'https:\/\/ovwktjjeoowlktdfbuuu\.supabase\.co'/);
   assert.match(appSource, /SUPABASE_PUBLISHABLE_KEY\s*=\s*'sb_publishable_B2pz5WTA3UEVUeKACIgmBw_8_r0S3kU'/);

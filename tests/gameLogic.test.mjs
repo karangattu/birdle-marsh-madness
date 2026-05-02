@@ -7,6 +7,7 @@ import {
   GAME_MODES,
   createGameState,
   createPlacements,
+  isTopLeaderboardScore,
   recordGuess,
   score,
   tickGame,
@@ -180,4 +181,18 @@ test('scoring rewards finds and time bonus, penalizes misses', () => {
   recordGuess(state, 'mallard', 'mallard', 1000);
   recordGuess(state, 'marsh_wren', 'song_sparrow', 1500); // miss
   assert.equal(score(state), 100 - 15);
+});
+
+test('leaderboard qualification only accepts scores that can rank in the top five', () => {
+  const currentTopFive = [
+    { score: 1200 },
+    { score: 1020 },
+    { score: 880 },
+    { score: 640 },
+    { score: 500 },
+  ];
+
+  assert.equal(isTopLeaderboardScore(501, currentTopFive), true);
+  assert.equal(isTopLeaderboardScore(500, currentTopFive), false);
+  assert.equal(isTopLeaderboardScore(900, currentTopFive.slice(0, 4)), true);
 });

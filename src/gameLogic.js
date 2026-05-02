@@ -199,6 +199,21 @@ export function score(state) {
   return Math.max(0, base + timeBonus - missPenalty);
 }
 
+export function isTopLeaderboardScore(scoreValue, entries, limit = 5) {
+  const numericScore = Number.parseInt(scoreValue, 10);
+  if (!Number.isFinite(numericScore) || numericScore < 0 || limit <= 0) return false;
+  const rankedEntries = Array.isArray(entries) ? entries : [];
+  if (rankedEntries.length < limit) return true;
+
+  const sortedScores = rankedEntries
+    .map((entry) => Number.parseInt(entry?.score, 10))
+    .filter((entryScore) => Number.isFinite(entryScore))
+    .sort((a, b) => b - a);
+
+  if (sortedScores.length < limit) return true;
+  return numericScore > sortedScores[limit - 1];
+}
+
 export function normalizeGameMode(mode) {
   return mode === GAME_MODES.expert ? GAME_MODES.expert : GAME_MODES.standard;
 }

@@ -12,4 +12,4 @@ Open `http://localhost:4173`.
 
 ## Supabase leaderboard
 
-Run `supabase/marsh_madness_leaderboard.sql` in the Supabase SQL editor before publishing the leaderboard build. The app writes completed rounds to `marsh_madness_leaderboard` and reads the top five scores separately for Regular and Expert mode.
+Run `supabase/marsh_madness_leaderboard.sql` in the Supabase SQL editor before publishing the leaderboard build. The migration creates or upgrades `marsh_madness_leaderboard` with `player_label`, which the app uses when a completed round qualifies for the Regular or Expert top five.
