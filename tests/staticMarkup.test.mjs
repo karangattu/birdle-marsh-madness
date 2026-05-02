@@ -90,6 +90,8 @@ test('opening screen shows regular and expert leaderboard previews', () => {
   assert.match(html, /id="splashLeaderboardExpert"/);
   assert.match(appSource, /leaderboardMode: 'regular'/);
   assert.match(appSource, /leaderboardMode: 'expert'/);
+  assert.match(appSource, /function syncSplashLeaderboardSelection\(/);
+  assert.match(styles, /\.splash-leaderboard-panel\.is-active/);
 });
 
 test('result screen includes a top five leaderboard panel', () => {

@@ -162,6 +162,19 @@ function setSelectedMode(mode) {
     button.setAttribute('aria-pressed', String(isSelected));
   }
   refreshBestTimeLabel();
+  syncSplashLeaderboardSelection();
+}
+
+function syncSplashLeaderboardSelection() {
+  const activeMode = normalizeGameMode(selectedMode);
+  for (const mode of GAME_MODE_ORDER) {
+    const slot = getLeaderboardSlot('splash', mode);
+    if (!slot?.panel) continue;
+    const isActive = normalizeGameMode(mode) === activeMode;
+    slot.panel.hidden = !isActive;
+    slot.panel.classList.toggle('is-active', isActive);
+    slot.panel.setAttribute('aria-hidden', String(!isActive));
+  }
 }
 
 // ---------------- Game state ----------------
@@ -190,8 +203,8 @@ let leaderboardNameRequestId = 0;
 // ---------------- Setup splash best-time ----------------
 function refreshBestTimeLabel() {
   updateModeBestLabels();
-  els.splashBest.hidden = false;
-  els.splashBest.innerHTML = renderScoreRecordsHtml(selectedMode);
+  els.splashBest.hidden = true;
+  els.splashBest.textContent = '';
 }
 
 function readBest(mode = GAME_MODES.standard) {
@@ -418,12 +431,14 @@ function getLeaderboardSlot(target, mode) {
   }
   if (gameMode === GAME_MODES.standard) {
     return {
+      panel: els.splashLeaderboardRegular,
       list: els.splashLeaderboardRegularList,
       status: els.splashLeaderboardRegularStatus,
     };
   }
   if (gameMode === GAME_MODES.expert) {
     return {
+      panel: els.splashLeaderboardExpert,
       list: els.splashLeaderboardExpertList,
       status: els.splashLeaderboardExpertStatus,
     };

@@ -31,24 +31,6 @@
               <strong id="expertModeBest">High score: 0</strong>
             </button>
           </div>
-          <div class="splash-leaderboards" aria-label="Opening high scores">
-            <section class="leaderboard-panel splash-leaderboard-panel" id="splashLeaderboardRegular" aria-labelledby="splashLeaderboardRegularTitle">
-              <div class="leaderboard-heading">
-                <h2 id="splashLeaderboardRegularTitle">Regular Top 5</h2>
-                <span>Score</span>
-              </div>
-              <ol class="leaderboard-list" id="splashLeaderboardRegularList"></ol>
-              <p class="leaderboard-status" id="splashLeaderboardRegularStatus">Loading scores</p>
-            </section>
-            <section class="leaderboard-panel splash-leaderboard-panel" id="splashLeaderboardExpert" aria-labelledby="splashLeaderboardExpertTitle">
-              <div class="leaderboard-heading">
-                <h2 id="splashLeaderboardExpertTitle">Expert Top 5</h2>
-                <span>Score</span>
-              </div>
-              <ol class="leaderboard-list" id="splashLeaderboardExpertList"></ol>
-              <p class="leaderboard-status" id="splashLeaderboardExpertStatus">Loading scores</p>
-            </section>
-          </div>
           <div class="splash-actions" aria-label="Start or learn the game">
             <button id="splashStart" class="primary-action" type="button">
               <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5a2 2 0 0 1 3-1.73l11 7a2 2 0 0 1 0 3.46l-11 7A2 2 0 0 1 5 19z" /></svg>
@@ -58,6 +40,27 @@
               <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" /><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" /><path d="M12 17h.01" /></svg>
               How to play
             </button>
+          </div>
+          <div class="splash-leaderboards" aria-label="Opening high scores">
+            <div class="splash-leaderboards-shell">
+              <span class="splash-leaderboards-kicker">Marsh Honors</span>
+              <section class="leaderboard-panel splash-leaderboard-panel is-active" id="splashLeaderboardRegular" aria-labelledby="splashLeaderboardRegularTitle">
+                <div class="leaderboard-heading">
+                  <h2 id="splashLeaderboardRegularTitle">Regular Top 5</h2>
+                  <span>Score</span>
+                </div>
+                <ol class="leaderboard-list" id="splashLeaderboardRegularList"></ol>
+                <p class="leaderboard-status" id="splashLeaderboardRegularStatus">Loading scores</p>
+              </section>
+              <section class="leaderboard-panel splash-leaderboard-panel" id="splashLeaderboardExpert" aria-labelledby="splashLeaderboardExpertTitle" hidden>
+                <div class="leaderboard-heading">
+                  <h2 id="splashLeaderboardExpertTitle">Expert Top 5</h2>
+                  <span>Score</span>
+                </div>
+                <ol class="leaderboard-list" id="splashLeaderboardExpertList"></ol>
+                <p class="leaderboard-status" id="splashLeaderboardExpertStatus">Loading scores</p>
+              </section>
+            </div>
           </div>
           <p class="splash-best" id="splashBest" hidden></p>
         </div>
