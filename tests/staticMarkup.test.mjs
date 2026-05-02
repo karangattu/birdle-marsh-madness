@@ -31,9 +31,10 @@ test('splash screen lets players choose standard or expert mode', () => {
 });
 
 test('game catalog exposes 12 bird buttons including Cinnamon Teal', () => {
-  const birdEntries = appSource.match(/\{ id: '/g) ?? [];
+  const birdCatalog = /const BIRDS = \[([\s\S]*?)\]\.map/.exec(appSource)?.[1] ?? '';
+  const birdEntries = birdCatalog.match(/\{ id: '/g) ?? [];
   assert.equal(birdEntries.length, 12);
-  assert.match(appSource, /cinnamon_teal/);
+  assert.match(birdCatalog, /cinnamon_teal/);
 });
 
 test('game uses a fixed 4.2x zoom and looping marsh ambience', () => {
@@ -82,6 +83,32 @@ test('opening screen can show locally stored high score', () => {
   assert.doesNotMatch(html, /splash-title/);
 });
 
+test('opening screen shows regular and expert leaderboard previews', () => {
+  assert.match(html, /id="modeRegular"/);
+  assert.match(html, /id="modeExpert"/);
+  assert.match(html, /id="splashLeaderboardRegular"/);
+  assert.match(html, /id="splashLeaderboardExpert"/);
+  assert.match(appSource, /leaderboardMode: 'regular'/);
+  assert.match(appSource, /leaderboardMode: 'expert'/);
+});
+
+test('result screen includes a top five leaderboard panel', () => {
+  assert.match(html, /id="resultLeaderboard"/);
+  assert.match(html, /id="resultLeaderboardList"/);
+  assert.match(html, /id="resultLeaderboardStatus"/);
+  assert.match(appSource, /limit', '5'/);
+  assert.match(appSource, /renderLeaderboard\('result'/);
+});
+
+test('app saves and fetches leaderboard scores through Supabase REST', () => {
+  assert.match(appSource, /SUPABASE_URL\s*=\s*'https:\/\/ovwktjjeoowlktdfbuuu\.supabase\.co'/);
+  assert.match(appSource, /SUPABASE_PUBLISHABLE_KEY\s*=\s*'sb_publishable_B2pz5WTA3UEVUeKACIgmBw_8_r0S3kU'/);
+  assert.match(appSource, /LEADERBOARD_TABLE\s*=\s*'marsh_madness_leaderboard'/);
+  assert.match(appSource, /function fetchLeaderboard\(mode/);
+  assert.match(appSource, /function saveLeaderboardScore\(entry/);
+  assert.match(appSource, /mode: leaderboardModeForGameMode\(gameMode\)/);
+});
+
 test('game over screen includes an SFBBO support line', () => {
   assert.match(html, /id="resultSupport"/);
   assert.match(appSource, /Want to support the real-world conservation work behind Birdle\? Explore SFBBO surveys and field projects at <a href="https:\/\/sfbbo\.org" target="_blank" rel="noreferrer">sfbbo\.org<\/a>\./);
@@ -115,6 +142,19 @@ test('game requests fullscreen when a session starts', () => {
   assert.match(appSource, /function enterFullscreenMode\(\)/);
   assert.match(appSource, /requestFullscreen\(\)\.catch\(/);
   assert.match(appSource, /enterFullscreenMode\(\);\s*\n\s*showScreen\('intro'\);/);
+});
+
+test('each start or replay path shows the intro before the tutorial and keeps video skip available', () => {
+  assert.match(html, /id="introSkip"/);
+  assert.match(appSource, /function beginGameSequence\(\) \{[\s\S]*showScreen\('intro'\);[\s\S]*introVideo\.currentTime = 0;[\s\S]*introVideo\.play\(\)/);
+  assert.match(appSource, /function advanceFromIntro\(\) \{[\s\S]*showScreen\('tutorial'\);/);
+  assert.match(appSource, /introSkip\.addEventListener\('click', advanceFromIntro\)/);
+  assert.match(appSource, /restartButton\.addEventListener\('click', \(\) => beginGameSequence\(\)\)/);
+  assert.match(appSource, /resultRestart\.addEventListener\('click', \(\) => beginGameSequence\(\)\)/);
+});
+
+test('service worker caches the optimized intro video for replay', () => {
+  assert.match(serviceWorker, /assets\/marsh_madness_intro_optimized\.mp4/);
 });
 
 test('game shows a portrait rotate guard on touch devices', () => {

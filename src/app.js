@@ -28,13 +28,19 @@ const BIRDS = [
 
 const LEGACY_BEST_TIME_KEY = 'birdle:bestTimeSeconds';
 const LEGACY_HIGH_SCORE_KEY = 'birdle:highScore';
+const GAME_MODE_KEY = 'birdle:selectedGameMode';
+const PLAYER_LABEL_KEY = 'birdle:playerLabel';
+const SUPABASE_URL = 'https://ovwktjjeoowlktdfbuuu.supabase.co';
+const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_B2pz5WTA3UEVUeKACIgmBw_8_r0S3kU';
+const LEADERBOARD_TABLE = 'marsh_madness_leaderboard';
 const DEFAULT_ZOOM = 4.2;
+const LEADERBOARD_LIMIT = 5;
 const MISSED_BIRD_REVEAL_MS = 4000;
 const TUTORIAL_TARGET = { x: 0.56, y: 0.55 };
 const GAME_MODE_ORDER = [GAME_MODES.standard, GAME_MODES.expert];
 const GAME_MODE_DETAILS = {
-  [GAME_MODES.standard]: { label: 'Standard', description: '60s round' },
-  [GAME_MODES.expert]: { label: 'Expert', description: '45s, smaller birds' },
+  [GAME_MODES.standard]: { label: 'Regular', description: '60s round', leaderboardMode: 'regular' },
+  [GAME_MODES.expert]: { label: 'Expert', description: '45s, smaller birds', leaderboardMode: 'expert' },
 };
 
 const ICONS = {
@@ -57,6 +63,14 @@ const els = {
   splashHowTo: $('splashHowTo'),
   splashBest: $('splashBest'),
   modeButtons: Array.from(document.querySelectorAll('[data-game-mode]')),
+  regularModeBest: $('regularModeBest'),
+  expertModeBest: $('expertModeBest'),
+  splashLeaderboardRegular: $('splashLeaderboardRegular'),
+  splashLeaderboardRegularList: $('splashLeaderboardRegularList'),
+  splashLeaderboardRegularStatus: $('splashLeaderboardRegularStatus'),
+  splashLeaderboardExpert: $('splashLeaderboardExpert'),
+  splashLeaderboardExpertList: $('splashLeaderboardExpertList'),
+  splashLeaderboardExpertStatus: $('splashLeaderboardExpertStatus'),
   introVideo: $('introVideo'),
   introSkip: $('introSkip'),
   tutorialDemo: $('tutorialDemo'),
@@ -89,6 +103,10 @@ const els = {
   resultCompare: $('resultCompare'),
   resultProgress: $('resultProgress'),
   resultSupport: $('resultSupport'),
+  resultLeaderboard: $('resultLeaderboard'),
+  resultLeaderboardList: $('resultLeaderboardList'),
+  resultLeaderboardStatus: $('resultLeaderboardStatus'),
+  resultLeaderboardMode: $('resultLeaderboardMode'),
   resultRestart: $('resultRestart'),
   resultHome: $('resultHome'),
 };
@@ -96,7 +114,8 @@ const els = {
 // ---------------- Screen state ----------------
 let activeScreen = 'splash';
 let returnToScreenAfterTutorial = 'splash';
-let selectedMode = GAME_MODES.standard;
+let selectedMode = readStoredMode();
+const leaderboardCache = new Map(GAME_MODE_ORDER.map((mode) => [mode, []]));
 
 function showScreen(name) {
   for (const [key, el] of Object.entries(screens)) {
@@ -123,9 +142,15 @@ function showScreen(name) {
 
 function setSelectedMode(mode) {
   selectedMode = normalizeGameMode(mode);
+  try {
+    localStorage.setItem(GAME_MODE_KEY, selectedMode);
+  } catch {
+    /* ignore */
+  }
   for (const button of els.modeButtons) {
     const isSelected = button.dataset.gameMode === selectedMode;
     button.classList.toggle('is-selected', isSelected);
+    button.classList.toggle('is-active', isSelected);
     button.setAttribute('aria-pressed', String(isSelected));
   }
   refreshBestTimeLabel();
@@ -154,6 +179,7 @@ let foundCueContext = null;
 
 // ---------------- Setup splash best-time ----------------
 function refreshBestTimeLabel() {
+  updateModeBestLabels();
   els.splashBest.hidden = false;
   els.splashBest.innerHTML = renderScoreRecordsHtml(selectedMode);
 }
@@ -180,6 +206,16 @@ function getHighScoreKey(mode) {
   return `birdle:highScore:${normalizeGameMode(mode)}`;
 }
 
+function updateModeBestLabels() {
+  for (const mode of GAME_MODE_ORDER) {
+    const highScore = readHighScore(mode);
+    const best = readBest(mode);
+    const text = best == null ? `High score: ${highScore}` : `High score: ${highScore} | ${best}s`;
+    if (mode === GAME_MODES.standard) els.regularModeBest.textContent = text;
+    if (mode === GAME_MODES.expert) els.expertModeBest.textContent = text;
+  }
+}
+
 function readStoredNumber(key) {
   try {
     const raw = localStorage.getItem(key);
@@ -191,12 +227,19 @@ function readStoredNumber(key) {
   }
 }
 
-function writeBest(seconds, mode = GAME_MODES.standard) {
+function writeStoredNumber(key, value) {
   try {
-    localStorage.setItem(getBestTimeKey(mode), String(seconds));
+    localStorage.setItem(key, String(value));
+    return true;
   } catch {
-    /* ignore */
+    return false;
   }
+}
+
+function writeBest(seconds, mode = GAME_MODES.standard) {
+  const gameMode = normalizeGameMode(mode);
+  writeStoredNumber(getBestTimeKey(gameMode), seconds);
+  if (gameMode === GAME_MODES.standard) writeStoredNumber(LEGACY_BEST_TIME_KEY, seconds);
 }
 
 function writeHighScoreIfBetter(points, mode = GAME_MODES.standard) {
@@ -204,9 +247,9 @@ function writeHighScoreIfBetter(points, mode = GAME_MODES.standard) {
   const previous = readHighScore(gameMode);
   const nextScore = Math.max(0, points);
   if (nextScore <= previous) return { highScore: previous, isNew: false };
-  try {
-    localStorage.setItem(getHighScoreKey(gameMode), String(nextScore));
-  } catch {
+  const didSave = writeStoredNumber(getHighScoreKey(gameMode), nextScore);
+  if (gameMode === GAME_MODES.standard) writeStoredNumber(LEGACY_HIGH_SCORE_KEY, nextScore);
+  if (!didSave) {
     return { highScore: previous, isNew: false };
   }
   return { highScore: nextScore, isNew: nextScore > previous };
@@ -225,6 +268,198 @@ function renderScoreRecordsHtml(activeMode = selectedMode) {
     const bestText = best == null ? 'No win yet' : `Best ${best}s`;
     return `<span class="score-record${isSelected ? ' is-selected' : ''}"><span class="record-mode">${detail.label}</span><strong>${highScore}</strong><span>${bestText}</span></span>`;
   }).join('');
+}
+
+function readStoredMode() {
+  try {
+    const saved = localStorage.getItem(GAME_MODE_KEY);
+    return normalizeGameMode(saved);
+  } catch {
+    return GAME_MODES.standard;
+  }
+}
+
+function leaderboardModeForGameMode(mode) {
+  return getModeDetail(mode).leaderboardMode;
+}
+
+// ---------------- Supabase leaderboard ----------------
+function supabaseHeaders(extra = {}) {
+  return {
+    apikey: SUPABASE_PUBLISHABLE_KEY,
+    Authorization: `Bearer ${SUPABASE_PUBLISHABLE_KEY}`,
+    ...extra,
+  };
+}
+
+async function fetchLeaderboard(mode) {
+  const url = new URL(`${SUPABASE_URL}/rest/v1/${LEADERBOARD_TABLE}`);
+  url.searchParams.set('select', 'mode,player_label,score,found_count,total_birds,misses,finished_seconds,is_won,created_at');
+  url.searchParams.set('mode', `eq.${leaderboardModeForGameMode(mode)}`);
+  url.searchParams.set('order', 'score.desc,created_at.asc');
+  url.searchParams.set('limit', '5');
+
+  const response = await fetch(url, {
+    headers: supabaseHeaders(),
+  });
+  if (!response.ok) throw new Error(`Leaderboard fetch failed: ${response.status}`);
+  const entries = await response.json();
+  return Array.isArray(entries) ? entries : [];
+}
+
+async function saveLeaderboardScore(entry) {
+  const response = await fetch(`${SUPABASE_URL}/rest/v1/${LEADERBOARD_TABLE}`, {
+    method: 'POST',
+    headers: supabaseHeaders({
+      'Content-Type': 'application/json',
+      Prefer: 'return=minimal',
+    }),
+    body: JSON.stringify(entry),
+  });
+  if (!response.ok) throw new Error(`Leaderboard save failed: ${response.status}`);
+}
+
+function refreshAllLeaderboards() {
+  for (const mode of GAME_MODE_ORDER) {
+    refreshLeaderboard(mode, ['splash']);
+  }
+}
+
+async function refreshLeaderboard(mode, targets) {
+  for (const target of targets) {
+    setLeaderboardStatus(target, mode, 'Loading scores');
+  }
+  try {
+    const entries = await fetchLeaderboard(mode);
+    leaderboardCache.set(mode, entries);
+    for (const target of targets) {
+      renderLeaderboard(target, mode, entries);
+    }
+  } catch {
+    for (const target of targets) {
+      renderLeaderboard(target, mode, leaderboardCache.get(mode) ?? []);
+      setLeaderboardStatus(target, mode, 'Leaderboard unavailable');
+    }
+  }
+}
+
+function renderLeaderboard(target, mode, entries = leaderboardCache.get(mode) ?? []) {
+  const slot = getLeaderboardSlot(target, mode);
+  if (!slot) return;
+  const gameMode = normalizeGameMode(mode);
+  if (slot.modeLabel) slot.modeLabel.textContent = getModeDetail(gameMode).label;
+  slot.list.innerHTML = '';
+
+  const topEntries = entries.slice(0, LEADERBOARD_LIMIT);
+  if (topEntries.length === 0) {
+    setLeaderboardStatus(target, mode, 'No scores yet');
+    return;
+  }
+
+  const fragment = document.createDocumentFragment();
+  topEntries.forEach((entry, index) => {
+    fragment.appendChild(makeLeaderboardEntry(entry, index));
+  });
+  slot.list.appendChild(fragment);
+  setLeaderboardStatus(target, mode, '');
+}
+
+function makeLeaderboardEntry(entry, index) {
+  const item = document.createElement('li');
+  item.className = 'leaderboard-entry';
+
+  const rank = document.createElement('span');
+  rank.className = 'leaderboard-rank';
+  rank.textContent = String(index + 1);
+
+  const detail = document.createElement('span');
+  detail.className = 'leaderboard-detail';
+  const name = document.createElement('strong');
+  name.textContent = entry.player_label || 'Marsh Birder';
+  const meta = document.createElement('small');
+  meta.textContent = leaderboardMetaText(entry);
+  detail.append(name, meta);
+
+  const scoreValue = document.createElement('span');
+  scoreValue.className = 'leaderboard-score';
+  scoreValue.textContent = String(Number.parseInt(entry.score, 10) || 0);
+
+  item.append(rank, detail, scoreValue);
+  return item;
+}
+
+function leaderboardMetaText(entry) {
+  const found = Number.parseInt(entry.found_count, 10) || 0;
+  const total = Number.parseInt(entry.total_birds, 10) || BIRDS.length;
+  const misses = Number.parseInt(entry.misses, 10) || 0;
+  const seconds = Number.parseInt(entry.finished_seconds, 10);
+  const finish = entry.is_won && Number.isFinite(seconds) ? `${seconds}s` : 'time out';
+  return `${found}/${total} | ${misses} misses | ${finish}`;
+}
+
+function getLeaderboardSlot(target, mode) {
+  const gameMode = normalizeGameMode(mode);
+  if (target === 'result') {
+    return {
+      list: els.resultLeaderboardList,
+      status: els.resultLeaderboardStatus,
+      modeLabel: els.resultLeaderboardMode,
+    };
+  }
+  if (gameMode === GAME_MODES.standard) {
+    return {
+      list: els.splashLeaderboardRegularList,
+      status: els.splashLeaderboardRegularStatus,
+    };
+  }
+  if (gameMode === GAME_MODES.expert) {
+    return {
+      list: els.splashLeaderboardExpertList,
+      status: els.splashLeaderboardExpertStatus,
+    };
+  }
+  return null;
+}
+
+function setLeaderboardStatus(target, mode, text) {
+  const slot = getLeaderboardSlot(target, mode);
+  if (!slot) return;
+  slot.status.textContent = text;
+  slot.status.hidden = text === '';
+}
+
+async function submitLeaderboardScore(finalScore, seconds, won, mode = state.mode) {
+  const gameMode = normalizeGameMode(mode);
+  const entry = {
+    mode: leaderboardModeForGameMode(gameMode),
+    player_label: getPlayerLabel(),
+    score: finalScore,
+    found_count: state.foundIds.size,
+    total_birds: state.birds.length,
+    misses: state.misses,
+    finished_seconds: won ? seconds : null,
+    is_won: won,
+  };
+
+  setLeaderboardStatus('result', gameMode, 'Saving score');
+  try {
+    await saveLeaderboardScore(entry);
+  } catch {
+    setLeaderboardStatus('result', gameMode, 'Score saved locally');
+  }
+  await refreshLeaderboard(gameMode, ['result', 'splash']);
+}
+
+function getPlayerLabel() {
+  try {
+    const saved = localStorage.getItem(PLAYER_LABEL_KEY);
+    if (saved) return saved;
+    const label = `Marsh Birder ${Math.floor(1000 + Math.random() * 9000)}`;
+    localStorage.setItem(PLAYER_LABEL_KEY, label);
+    return label;
+  } catch {
+    return 'Marsh Birder';
+  }
 }
 
 // ---------------- Bird DOM rendering ----------------
@@ -552,7 +787,7 @@ function refreshHud() {
     window.clearTimeout(els.analogTimer._tickTimer);
     els.analogTimer._tickTimer = window.setTimeout(() => els.analogTimer.classList.remove('is-tick'), 180);
   }
-  els.foundCount.textContent = `${nextFound}/${BIRDS.length}`;
+  els.foundCount.textContent = `${nextFound}/${state.birds.length}`;
   els.misses.textContent = String(nextMisses);
   if (nextFound > previousFound) {
     els.foundCount.classList.add('is-bump');
@@ -647,7 +882,28 @@ function pauseTutorialAmbience(reset = false) {
   if (reset) els.tutorialAudio.currentTime = 0;
 }
 
+function resetRoundForReplay() {
+  if (rafId) {
+    cancelAnimationFrame(rafId);
+    rafId = null;
+  }
+  if (missedRevealTimer) {
+    clearTimeout(missedRevealTimer);
+    missedRevealTimer = null;
+  }
+  isRevealingMisses = false;
+  isDragging = false;
+  pointerGrabId = null;
+  focusedBirdId = null;
+  state = null;
+  els.marshStage.classList.remove('is-dragging', 'is-revealing-misses');
+  els.eyepiece.classList.remove('is-on-target');
+  els.feedback.classList.remove('is-visible');
+  pauseMarshAmbience(true);
+}
+
 function beginGameSequence() {
+  resetRoundForReplay();
   enterFullscreenMode();
   showScreen('intro');
   els.introVideo.pause();
@@ -756,7 +1012,7 @@ function endRound() {
 }
 
 function getMissedBirdIds() {
-  return BIRDS.map((bird) => bird.id).filter((birdId) => !state.foundIds.has(birdId));
+  return state.birds.map((bird) => bird.id).filter((birdId) => !state.foundIds.has(birdId));
 }
 
 function revealMissedBirds(missedIds) {
@@ -804,8 +1060,8 @@ function showResultScreen() {
   els.resultTitle.textContent = won ? `${modeDetail.label}: You spotted them all — ${tier.label}` : `${modeDetail.label}: ${tier.label}`;
   const seconds = won ? state.finishedSeconds : (state.roundLengthSeconds ?? GAME_LENGTH_SECONDS);
   els.resultStats.innerHTML = won
-    ? `Found <strong>${state.foundIds.size}/${BIRDS.length}</strong> in <strong>${seconds}s</strong> with <strong>${state.misses}</strong> misses.<br>${modeDetail.label} score: <strong>${finalScore}</strong>`
-    : `Found <strong>${state.foundIds.size}/${BIRDS.length}</strong> birds with <strong>${state.misses}</strong> misses.<br>${modeDetail.label} score: <strong>${finalScore}</strong>`;
+    ? `Found <strong>${state.foundIds.size}/${state.birds.length}</strong> in <strong>${seconds}s</strong> with <strong>${state.misses}</strong> misses.<br>${modeDetail.label} score: <strong>${finalScore}</strong>`
+    : `Found <strong>${state.foundIds.size}/${state.birds.length}</strong> birds with <strong>${state.misses}</strong> misses.<br>${modeDetail.label} score: <strong>${finalScore}</strong>`;
 
   const summaryLines = [highScore.isNew ? `New ${modeDetail.label} high score: ${highScore.highScore}!` : `${modeDetail.label} high score: ${highScore.highScore}`];
   if (won) {
@@ -827,9 +1083,11 @@ function showResultScreen() {
     ? `You are at the ${modeDetail.label} high score.`
     : `You are ${pointsFromHighScore} points from the ${modeDetail.label} high score.`;
   els.resultSupport.innerHTML = 'Want to support the real-world conservation work behind Birdle? Explore SFBBO surveys and field projects at <a href="https://sfbbo.org" target="_blank" rel="noreferrer">sfbbo.org</a>.';
+  renderLeaderboard('result', mode);
 
   showScreen('result');
   refreshBestTimeLabel();
+  submitLeaderboardScore(finalScore, seconds, won, mode);
 }
 
 function scoreTierFor(scoreValue) {
@@ -847,12 +1105,17 @@ function init() {
   renderBirdButtons();
   attachStageListeners();
   attachTutorialDemoListeners();
-  setSelectedMode(GAME_MODES.standard);
-  lastHud = { remainingSeconds: GAME_MODE_LENGTH_SECONDS[GAME_MODES.standard], foundCount: 0, misses: 0 };
+  setSelectedMode(selectedMode);
+  lastHud = { remainingSeconds: GAME_MODE_LENGTH_SECONDS[selectedMode], foundCount: 0, misses: 0 };
 
   for (const button of els.modeButtons) {
     button.addEventListener('click', () => setSelectedMode(button.dataset.gameMode));
   }
+
+  for (const mode of GAME_MODE_ORDER) {
+    renderLeaderboard('splash', mode);
+  }
+  refreshAllLeaderboards();
 
   els.splashStart.addEventListener('click', () => {
     returnToScreenAfterTutorial = 'splash';
@@ -882,7 +1145,7 @@ function init() {
     showScreen('tutorial');
   });
   els.quitButton.addEventListener('click', quitRoundToHome);
-  els.restartButton.addEventListener('click', () => startRound());
+  els.restartButton.addEventListener('click', () => beginGameSequence());
   els.resultRestart.addEventListener('click', () => beginGameSequence());
   els.resultHome.addEventListener('click', () => showScreen('splash'));
 

@@ -20,14 +20,34 @@
         <img class="splash-poster" src="assets/marsh_madness_poster.png" alt="Birdle: Marsh Madness poster" />
         <div class="splash-bottom-bar">
           <div class="mode-selector" role="group" aria-label="Choose game mode">
-            <button id="standardModeButton" class="mode-button is-selected" type="button" data-game-mode="standard" aria-pressed="true">
-              <span>Standard</span>
+            <button id="modeRegular" class="mode-button mode-option is-selected is-active" type="button" data-game-mode="standard" aria-pressed="true">
+              <span>Regular</span>
               <small>60s round</small>
+              <strong id="regularModeBest">High score: 0</strong>
             </button>
-            <button id="expertModeButton" class="mode-button" type="button" data-game-mode="expert" aria-pressed="false">
+            <button id="modeExpert" class="mode-button mode-option" type="button" data-game-mode="expert" aria-pressed="false">
               <span>Expert</span>
               <small>45s, smaller birds</small>
+              <strong id="expertModeBest">High score: 0</strong>
             </button>
+          </div>
+          <div class="splash-leaderboards" aria-label="Opening high scores">
+            <section class="leaderboard-panel splash-leaderboard-panel" id="splashLeaderboardRegular" aria-labelledby="splashLeaderboardRegularTitle">
+              <div class="leaderboard-heading">
+                <h2 id="splashLeaderboardRegularTitle">Regular Top 5</h2>
+                <span>Score</span>
+              </div>
+              <ol class="leaderboard-list" id="splashLeaderboardRegularList"></ol>
+              <p class="leaderboard-status" id="splashLeaderboardRegularStatus">Loading scores</p>
+            </section>
+            <section class="leaderboard-panel splash-leaderboard-panel" id="splashLeaderboardExpert" aria-labelledby="splashLeaderboardExpertTitle">
+              <div class="leaderboard-heading">
+                <h2 id="splashLeaderboardExpertTitle">Expert Top 5</h2>
+                <span>Score</span>
+              </div>
+              <ol class="leaderboard-list" id="splashLeaderboardExpertList"></ol>
+              <p class="leaderboard-status" id="splashLeaderboardExpertStatus">Loading scores</p>
+            </section>
           </div>
           <div class="splash-actions" aria-label="Start or learn the game">
             <button id="splashStart" class="primary-action" type="button">
@@ -190,6 +210,14 @@
           <p class="result-compare" id="resultCompare"></p>
           <p class="result-progress" id="resultProgress"></p>
           <p class="result-support" id="resultSupport"></p>
+          <section class="leaderboard-panel result-leaderboard" id="resultLeaderboard" aria-labelledby="resultLeaderboardTitle">
+            <div class="leaderboard-heading">
+              <h2 id="resultLeaderboardTitle">Top 5</h2>
+              <span id="resultLeaderboardMode">Regular</span>
+            </div>
+            <ol class="leaderboard-list" id="resultLeaderboardList"></ol>
+            <p class="leaderboard-status" id="resultLeaderboardStatus">Loading scores</p>
+          </section>
           <div class="result-actions">
             <button id="resultRestart" class="primary-action" type="button">
               <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.64-6.36" /><path d="M21 3v6h-6" /></svg>
