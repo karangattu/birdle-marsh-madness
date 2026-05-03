@@ -15,6 +15,7 @@ export const GAME_MODE_LENGTH_SECONDS = {
   [GAME_MODES.standard]: GAME_LENGTH_SECONDS,
   [GAME_MODES.expert]: 45,
 };
+const FIND_SPEED_BONUS_MAX = 25;
 
 // Bird placement bounds (percent of stage). Keep birds in the far marsh band:
 // below the open sky, but not so close that the scope decoration covers them.
@@ -139,6 +140,7 @@ export function createGameState({ birds, now = Date.now(), placements, mode = GA
     isOver: false,
     isWon: false,
     foundIds: new Set(),
+    findSpeedBonus: 0,
     misses: 0,
     finishedSeconds: null,
     lastGuess: null,
@@ -173,6 +175,7 @@ export function recordGuess(state, guessedBirdId, focusedBirdId, now = Date.now(
   }
   if (guessedBirdId === focusedBirdId) {
     state.foundIds.add(focusedBirdId);
+    state.findSpeedBonus += calculateFindSpeedBonus(state.remainingSeconds, getRoundLengthSeconds(state));
     const bird = state.birds.find((b) => b.id === focusedBirdId);
     state.lastGuess = { guessedBirdId, focusedBirdId, correct: true, at: now };
     if (state.foundIds.size === state.birds.length) {
@@ -194,9 +197,10 @@ export function recordGuess(state, guessedBirdId, focusedBirdId, now = Date.now(
 export function score(state) {
   const found = state.foundIds.size;
   const base = found * 100;
+  const findSpeedBonus = Math.max(0, Number.parseInt(state.findSpeedBonus, 10) || 0);
   const timeBonus = state.isWon ? state.remainingSeconds * 10 : 0;
   const missPenalty = state.misses * 15;
-  return Math.max(0, base + timeBonus - missPenalty);
+  return Math.max(0, base + findSpeedBonus + timeBonus - missPenalty);
 }
 
 export function normalizeLeaderboardPlayerKey(playerLabel) {
@@ -272,4 +276,12 @@ function compareLeaderboardCandidates(left, right) {
 function parseLeaderboardCreatedAt(value) {
   const timestamp = Date.parse(value ?? '');
   return Number.isFinite(timestamp) ? timestamp : Number.MAX_SAFE_INTEGER;
+}
+
+function calculateFindSpeedBonus(remainingSeconds, roundLengthSeconds) {
+  if (!Number.isFinite(remainingSeconds) || !Number.isFinite(roundLengthSeconds) || roundLengthSeconds <= 0) {
+    return 0;
+  }
+  const clampedRemaining = Math.max(0, Math.min(roundLengthSeconds, remainingSeconds));
+  return Math.ceil((clampedRemaining / roundLengthSeconds) * FIND_SPEED_BONUS_MAX);
 }

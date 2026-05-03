@@ -178,11 +178,35 @@ test('expert timer ends after its shorter round length', () => {
   assert.equal(state.finishedSeconds, 45);
 });
 
-test('scoring rewards finds and time bonus, penalizes misses', () => {
+test('scoring rewards finds, speed, and penalizes misses', () => {
   const state = createGameState({ birds: BIRDS, now: 0 });
   recordGuess(state, 'mallard', 'mallard', 1000);
   recordGuess(state, 'marsh_wren', 'song_sparrow', 1500); // miss
-  assert.equal(score(state), 100 - 15);
+  assert.equal(score(state), 110);
+});
+
+test('finding the same five birds faster produces a higher score', () => {
+  const roundBirds = [
+    { id: 'bird_1', name: 'Bird 1' },
+    { id: 'bird_2', name: 'Bird 2' },
+    { id: 'bird_3', name: 'Bird 3' },
+    { id: 'bird_4', name: 'Bird 4' },
+    { id: 'bird_5', name: 'Bird 5' },
+    { id: 'bird_6', name: 'Bird 6' },
+  ];
+
+  const fastState = createGameState({ birds: roundBirds, now: 0 });
+  const slowState = createGameState({ birds: roundBirds, now: 0 });
+  const foundBirdIds = roundBirds.slice(0, 5).map((bird) => bird.id);
+
+  foundBirdIds.forEach((birdId, index) => {
+    recordGuess(fastState, birdId, birdId, (index + 1) * 1000);
+    recordGuess(slowState, birdId, birdId, (index + 1) * 7000);
+  });
+
+  assert.equal(fastState.foundIds.size, 5);
+  assert.equal(slowState.foundIds.size, 5);
+  assert.ok(score(fastState) > score(slowState));
 });
 
 test('leaderboard qualification only accepts scores that can rank in the top five', () => {
