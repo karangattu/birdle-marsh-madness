@@ -37,10 +37,18 @@ test('leaderboard SQL enables public read and insert policies for anon clients',
 test('leaderboard SQL upgrades existing tables with player labels', async () => {
   const sql = await readLeaderboardSql();
   assert.match(sql, /alter table public\.marsh_madness_leaderboard\s+add column if not exists player_label text/);
-  assert.match(sql, /update public\.marsh_madness_leaderboard\s+set player_label = case/);
+  assert.match(sql, /update public\.marsh_madness_leaderboard\s+set\s+player_label = case/);
   assert.match(sql, /when player_label is null or char_length\(btrim\(player_label\)\) = 0 then 'Marsh Birder'/);
   assert.match(sql, /else left\(btrim\(player_label\), 40\)/);
   assert.match(sql, /alter column player_label set not null/);
+});
+
+test('leaderboard SQL keeps one row per normalized player name in each mode', async () => {
+  const sql = await readLeaderboardSql();
+  assert.match(sql, /add column if not exists player_key text/);
+  assert.match(sql, /create unique index if not exists marsh_madness_leaderboard_mode_player_key_idx/);
+  assert.match(sql, /on public\.marsh_madness_leaderboard \(mode, player_key\)/);
+  assert.match(sql, /row_number\(\) over \(partition by mode, player_key order by score desc, created_at asc, id asc\)/);
 });
 
 test('leaderboard SQL adds a top-score lookup index', async () => {

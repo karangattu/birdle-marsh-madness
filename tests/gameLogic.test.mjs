@@ -8,8 +8,10 @@ import {
   createGameState,
   createPlacements,
   isTopLeaderboardScore,
+  normalizeLeaderboardPlayerKey,
   recordGuess,
   score,
+  selectUniqueLeaderboardEntries,
   tickGame,
 } from '../src/gameLogic.js';
 
@@ -195,4 +197,34 @@ test('leaderboard qualification only accepts scores that can rank in the top fiv
   assert.equal(isTopLeaderboardScore(501, currentTopFive), true);
   assert.equal(isTopLeaderboardScore(500, currentTopFive), false);
   assert.equal(isTopLeaderboardScore(900, currentTopFive.slice(0, 4)), true);
+});
+
+test('leaderboard keeps only the highest score for each normalized player name', () => {
+  const uniqueEntries = selectUniqueLeaderboardEntries([
+    { player_label: 'Alice', score: 820, created_at: '2026-05-02T10:00:00Z' },
+    { player_label: 'Bob', score: 790, created_at: '2026-05-02T10:01:00Z' },
+    { player_label: ' alice ', score: 910, created_at: '2026-05-02T10:02:00Z' },
+    { player_label: 'Carol', score: 700, created_at: '2026-05-02T10:03:00Z' },
+  ]);
+
+  assert.deepEqual(uniqueEntries.map((entry) => [entry.player_label, entry.score]), [
+    [' alice ', 910],
+    ['Bob', 790],
+    ['Carol', 700],
+  ]);
+  assert.equal(normalizeLeaderboardPlayerKey('  ALIce '), 'alice');
+});
+
+test('leaderboard qualification compares against the player’s existing best score', () => {
+  const currentTopFive = [
+    { player_label: 'Alice', score: 1200 },
+    { player_label: 'Bob', score: 1020 },
+    { player_label: 'Carol', score: 880 },
+    { player_label: 'Dan', score: 640 },
+    { player_label: 'Eve', score: 500 },
+  ];
+
+  assert.equal(isTopLeaderboardScore(760, currentTopFive, 5, 'Alice'), false);
+  assert.equal(isTopLeaderboardScore(1201, currentTopFive, 5, 'Alice'), true);
+  assert.equal(isTopLeaderboardScore(501, currentTopFive, 5, 'Frank'), true);
 });

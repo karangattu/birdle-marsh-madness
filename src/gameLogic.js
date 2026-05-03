@@ -199,19 +199,60 @@ export function score(state) {
   return Math.max(0, base + timeBonus - missPenalty);
 }
 
-export function isTopLeaderboardScore(scoreValue, entries, limit = 5) {
+export function normalizeLeaderboardPlayerKey(playerLabel) {
+  if (typeof playerLabel !== 'string') return '';
+  return playerLabel.trim().replace(/\s+/g, ' ').toLowerCase();
+}
+
+export function selectUniqueLeaderboardEntries(entries, limit = Infinity) {
+  const rankedEntries = Array.isArray(entries) ? entries : [];
+  const bestByPlayer = new Map();
+
+  rankedEntries.forEach((entry, index) => {
+    const playerKey = normalizeLeaderboardPlayerKey(entry?.player_label ?? '') || `__entry_${index}`;
+
+    const candidate = {
+      entry,
+      score: Number.parseInt(entry?.score, 10) || 0,
+      createdAt: parseLeaderboardCreatedAt(entry?.created_at),
+      index,
+    };
+    const existing = bestByPlayer.get(playerKey);
+    if (!existing || compareLeaderboardCandidates(candidate, existing) < 0) {
+      bestByPlayer.set(playerKey, candidate);
+    }
+  });
+
+  const maxEntries = Number.isFinite(limit) ? Math.max(0, Math.trunc(limit)) : Infinity;
+  return [...bestByPlayer.values()]
+    .sort(compareLeaderboardCandidates)
+    .slice(0, maxEntries)
+    .map((candidate) => candidate.entry);
+}
+
+export function isTopLeaderboardScore(scoreValue, entries, limit = 5, playerLabel = '') {
   const numericScore = Number.parseInt(scoreValue, 10);
   if (!Number.isFinite(numericScore) || numericScore < 0 || limit <= 0) return false;
-  const rankedEntries = Array.isArray(entries) ? entries : [];
-  if (rankedEntries.length < limit) return true;
+  const uniqueEntries = selectUniqueLeaderboardEntries(entries);
+  const playerKey = normalizeLeaderboardPlayerKey(playerLabel);
+  const existingEntry = playerKey
+    ? uniqueEntries.find((entry) => normalizeLeaderboardPlayerKey(entry?.player_label ?? '') === playerKey)
+    : null;
 
-  const sortedScores = rankedEntries
-    .map((entry) => Number.parseInt(entry?.score, 10))
-    .filter((entryScore) => Number.isFinite(entryScore))
-    .sort((a, b) => b - a);
+  if (existingEntry) {
+    const existingScore = Number.parseInt(existingEntry.score, 10);
+    if (Number.isFinite(existingScore) && numericScore <= existingScore) {
+      return false;
+    }
+  }
 
-  if (sortedScores.length < limit) return true;
-  return numericScore > sortedScores[limit - 1];
+  const comparisonEntries = existingEntry
+    ? uniqueEntries.filter((entry) => normalizeLeaderboardPlayerKey(entry?.player_label ?? '') !== playerKey)
+    : uniqueEntries;
+  if (comparisonEntries.length < limit) return true;
+
+  const cutoff = Number.parseInt(comparisonEntries[limit - 1]?.score, 10);
+  return !Number.isFinite(cutoff) || numericScore > cutoff;
 }
 
 export function normalizeGameMode(mode) {
@@ -220,4 +261,15 @@ export function normalizeGameMode(mode) {
 
 function getRoundLengthSeconds(state) {
   return state.roundLengthSeconds ?? GAME_MODE_LENGTH_SECONDS[normalizeGameMode(state.mode)];
+}
+
+function compareLeaderboardCandidates(left, right) {
+  if (left.score !== right.score) return right.score - left.score;
+  if (left.createdAt !== right.createdAt) return left.createdAt - right.createdAt;
+  return left.index - right.index;
+}
+
+function parseLeaderboardCreatedAt(value) {
+  const timestamp = Date.parse(value ?? '');
+  return Number.isFinite(timestamp) ? timestamp : Number.MAX_SAFE_INTEGER;
 }

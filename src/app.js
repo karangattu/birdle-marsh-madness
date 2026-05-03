@@ -5,7 +5,9 @@ import {
   createGameState,
   createPlacements,
   isTopLeaderboardScore,
+  normalizeLeaderboardPlayerKey,
   normalizeGameMode,
+  selectUniqueLeaderboardEntries,
   recordGuess,
   score,
   tickGame,
@@ -308,15 +310,17 @@ async function fetchLeaderboard(mode) {
   });
   if (!response.ok) throw new Error(`Leaderboard fetch failed: ${response.status}`);
   const entries = await response.json();
-  return Array.isArray(entries) ? entries : [];
+  return selectUniqueLeaderboardEntries(entries, LEADERBOARD_LIMIT);
 }
 
 async function saveLeaderboardScore(entry) {
-  const response = await fetch(`${SUPABASE_URL}/rest/v1/${LEADERBOARD_TABLE}`, {
+  const url = new URL(`${SUPABASE_URL}/rest/v1/${LEADERBOARD_TABLE}`);
+  url.searchParams.set('on_conflict', 'mode,player_key');
+  const response = await fetch(url, {
     method: 'POST',
     headers: supabaseHeaders({
       'Content-Type': 'application/json',
-      Prefer: 'return=minimal',
+      Prefer: 'resolution=merge-duplicates,return=minimal',
     }),
     body: JSON.stringify(entry),
   });
@@ -349,7 +353,7 @@ function renderLeaderboard(target, mode, entries = leaderboardCache.get(mode) ??
   if (slot.modeLabel) slot.modeLabel.textContent = getModeDetail(gameMode).label;
   slot.list.innerHTML = '';
 
-  const topEntries = entries.slice(0, LEADERBOARD_LIMIT);
+  const topEntries = selectUniqueLeaderboardEntries(entries, LEADERBOARD_LIMIT);
   if (topEntries.length === 0) {
     setLeaderboardStatus(target, mode, 'No scores yet');
     return;
@@ -432,6 +436,7 @@ function makeLeaderboardEntryPayload(finalScore, seconds, won, mode, playerLabel
 async function prepareLeaderboardNameEntry(finalScore, seconds, won, mode = state.mode) {
   const gameMode = normalizeGameMode(mode);
   const entry = makeLeaderboardEntryPayload(finalScore, seconds, won, gameMode, '');
+  const storedPlayerLabel = readPlayerLabel();
   resetLeaderboardNameForm();
   const requestId = ++leaderboardNameRequestId;
   setLeaderboardStatus('result', gameMode, 'Checking Top 5');
@@ -449,8 +454,8 @@ async function prepareLeaderboardNameEntry(finalScore, seconds, won, mode = stat
     return;
   }
 
-  if (!isTopLeaderboardScore(finalScore, entries, LEADERBOARD_LIMIT)) {
-    setLeaderboardStatus('result', gameMode, topFiveCutoffText(entries));
+  if (!isTopLeaderboardScore(finalScore, entries, LEADERBOARD_LIMIT, storedPlayerLabel)) {
+    setLeaderboardStatus('result', gameMode, topFiveCutoffText(entries, storedPlayerLabel, finalScore));
     return;
   }
 
@@ -458,12 +463,21 @@ async function prepareLeaderboardNameEntry(finalScore, seconds, won, mode = stat
   showLeaderboardNameForm(gameMode, finalScore);
 }
 
-function topFiveCutoffText(entries) {
-  const topScores = Array.isArray(entries)
-    ? entries.map((entry) => Number.parseInt(entry.score, 10)).filter((entryScore) => Number.isFinite(entryScore))
-    : [];
+function topFiveCutoffText(entries, playerLabel = '', scoreValue = null) {
+  const playerEntry = playerLabel
+    ? selectUniqueLeaderboardEntries(entries).find((entry) => normalizeLeaderboardPlayerKey(entry.player_label) === normalizeLeaderboardPlayerKey(playerLabel))
+    : null;
+  const numericScore = Number.parseInt(scoreValue, 10);
+  const existingScore = Number.parseInt(playerEntry?.score, 10);
+  if (playerEntry && Number.isFinite(numericScore) && Number.isFinite(existingScore) && numericScore <= existingScore) {
+    return `Your saved best is already ${existingScore} points`;
+  }
+
+  const topScores = selectUniqueLeaderboardEntries(entries, LEADERBOARD_LIMIT)
+    .map((entry) => Number.parseInt(entry.score, 10))
+    .filter((entryScore) => Number.isFinite(entryScore));
   if (topScores.length < LEADERBOARD_LIMIT) return '';
-  const cutoff = [...topScores].sort((a, b) => b - a)[LEADERBOARD_LIMIT - 1];
+  const cutoff = topScores[topScores.length - 1];
   return `Top 5 starts above ${cutoff} points`;
 }
 
@@ -512,9 +526,9 @@ async function submitLeaderboardName(event) {
   try {
     const latestEntries = await fetchLeaderboard(gameMode);
     leaderboardCache.set(gameMode, latestEntries);
-    if (!isTopLeaderboardScore(pendingLeaderboardEntry.score, latestEntries, LEADERBOARD_LIMIT)) {
+    if (!isTopLeaderboardScore(pendingLeaderboardEntry.score, latestEntries, LEADERBOARD_LIMIT, playerLabel)) {
       renderLeaderboard('result', gameMode, latestEntries);
-      setLeaderboardStatus('result', gameMode, 'This score just missed the Top 5');
+      setLeaderboardStatus('result', gameMode, topFiveCutoffText(latestEntries, playerLabel, pendingLeaderboardEntry.score));
       resetLeaderboardNameForm();
       return;
     }

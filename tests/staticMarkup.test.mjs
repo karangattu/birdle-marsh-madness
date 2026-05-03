@@ -116,6 +116,12 @@ test('app saves and fetches leaderboard scores through Supabase REST', () => {
   assert.match(appSource, /mode: leaderboardModeForGameMode\(gameMode\)/);
 });
 
+test('app upserts leaderboard scores by unique player key', () => {
+  assert.match(appSource, /selectUniqueLeaderboardEntries/);
+  assert.match(appSource, /on_conflict', 'mode,player_key'/);
+  assert.match(appSource, /Prefer: 'resolution=merge-duplicates,return=minimal'/);
+});
+
 test('game over screen includes an SFBBO support line', () => {
   assert.match(html, /id="resultSupport"/);
   assert.match(appSource, /Want to support the real-world conservation work behind Birdle\? Explore SFBBO surveys and field projects at <a href="https:\/\/sfbbo\.org" target="_blank" rel="noreferrer">sfbbo\.org<\/a>\./);
