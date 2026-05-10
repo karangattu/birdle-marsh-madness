@@ -33,6 +33,7 @@ const LEGACY_BEST_TIME_KEY = 'birdle:bestTimeSeconds';
 const LEGACY_HIGH_SCORE_KEY = 'birdle:highScore';
 const GAME_MODE_KEY = 'birdle:selectedGameMode';
 const PLAYER_LABEL_KEY = 'birdle:playerLabel';
+const INSTALL_PROMPT_DISMISS_KEY = 'birdle:installPromptDismissed';
 const SUPABASE_URL = 'https://ovwktjjeoowlktdfbuuu.supabase.co';
 const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_B2pz5WTA3UEVUeKACIgmBw_8_r0S3kU';
 const LEADERBOARD_TABLE = 'marsh_madness_leaderboard';
@@ -66,6 +67,10 @@ const els = {
   splashStart: $('splashStart'),
   splashHowTo: $('splashHowTo'),
   splashBest: $('splashBest'),
+  installPrompt: $('installPrompt'),
+  installPromptText: $('installPromptText'),
+  installPromptInstall: $('installPromptInstall'),
+  installPromptDismiss: $('installPromptDismiss'),
   modeButtons: Array.from(document.querySelectorAll('[data-game-mode]')),
   regularModeBest: $('regularModeBest'),
   expertModeBest: $('expertModeBest'),
@@ -119,6 +124,7 @@ const els = {
 let activeScreen = 'splash';
 let returnToScreenAfterTutorial = 'splash';
 let selectedMode = readStoredMode();
+let deferredInstallPrompt = null;
 const leaderboardCache = new Map(GAME_MODE_ORDER.map((mode) => [mode, []]));
 
 function showScreen(name) {
@@ -573,6 +579,109 @@ function writePlayerLabel(label) {
   } catch {
     /* ignore */
   }
+}
+
+// ---------------- Install prompt ----------------
+function isStandaloneDisplayMode() {
+  return window.matchMedia?.('(display-mode: standalone)').matches || window.navigator.standalone === true;
+}
+
+function isTouchDevice() {
+  return window.matchMedia?.('(pointer: coarse)').matches || navigator.maxTouchPoints > 0;
+}
+
+function readInstallPromptDismissed() {
+  try {
+    return sessionStorage.getItem(INSTALL_PROMPT_DISMISS_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
+function writeInstallPromptDismissed(isDismissed) {
+  try {
+    if (isDismissed) {
+      sessionStorage.setItem(INSTALL_PROMPT_DISMISS_KEY, '1');
+    } else {
+      sessionStorage.removeItem(INSTALL_PROMPT_DISMISS_KEY);
+    }
+  } catch {
+    /* ignore */
+  }
+}
+
+function hideInstallPrompt() {
+  if (!els.installPrompt) return;
+  els.installPrompt.hidden = true;
+  els.installPrompt.classList.remove('is-visible');
+  els.installPromptInstall.hidden = true;
+}
+
+function renderInstallPrompt() {
+  if (!els.installPrompt) return;
+
+  if (isStandaloneDisplayMode() || readInstallPromptDismissed()) {
+    hideInstallPrompt();
+    return;
+  }
+
+  if (!deferredInstallPrompt && !isTouchDevice()) {
+    hideInstallPrompt();
+    return;
+  }
+
+  if (deferredInstallPrompt) {
+    els.installPromptText.textContent = 'Install Marsh Madness for quicker launch and offline play.';
+    els.installPromptInstall.hidden = false;
+  } else {
+    els.installPromptText.textContent = 'Use your browser menu to add Marsh Madness to your home screen for faster launch and offline play.';
+    els.installPromptInstall.hidden = true;
+  }
+
+  els.installPrompt.hidden = false;
+  els.installPrompt.classList.add('is-visible');
+}
+
+async function promptInstallApp() {
+  if (!deferredInstallPrompt) return;
+
+  const installEvent = deferredInstallPrompt;
+  deferredInstallPrompt = null;
+
+  try {
+    installEvent.prompt();
+    const choice = await installEvent.userChoice;
+    if (choice?.outcome === 'accepted') {
+      writeInstallPromptDismissed(false);
+      hideInstallPrompt();
+      return;
+    }
+    if (choice?.outcome === 'dismissed') {
+      writeInstallPromptDismissed(true);
+    }
+  } catch {
+    /* ignore */
+  }
+
+  renderInstallPrompt();
+}
+
+function handleBeforeInstallPrompt(event) {
+  event.preventDefault();
+  deferredInstallPrompt = event;
+  renderInstallPrompt();
+}
+
+function handleAppInstalled() {
+  deferredInstallPrompt = null;
+  writeInstallPromptDismissed(false);
+  hideInstallPrompt();
+}
+
+function dismissInstallPrompt() {
+  deferredInstallPrompt = null;
+  writeInstallPromptDismissed(true);
+  hideInstallPrompt();
 }
 
 // ---------------- Bird DOM rendering ----------------
@@ -1220,6 +1329,7 @@ function init() {
   attachTutorialDemoListeners();
   setSelectedMode(selectedMode);
   lastHud = { remainingSeconds: GAME_MODE_LENGTH_SECONDS[selectedMode], foundCount: 0, misses: 0 };
+  renderInstallPrompt();
 
   for (const button of els.modeButtons) {
     button.addEventListener('click', () => setSelectedMode(button.dataset.gameMode));
@@ -1233,6 +1343,8 @@ function init() {
     returnToScreenAfterTutorial = 'splash';
     showScreen('tutorial');
   });
+  els.installPromptInstall.addEventListener('click', promptInstallApp);
+  els.installPromptDismiss.addEventListener('click', dismissInstallPrompt);
   els.introVideo.addEventListener('ended', advanceFromIntro);
   els.introVideo.addEventListener('error', advanceFromIntro);
   els.introSkip.addEventListener('click', advanceFromIntro);
@@ -1271,6 +1383,9 @@ function init() {
       playMarshAmbience();
     }
   });
+
+  window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+  window.addEventListener('appinstalled', handleAppInstalled);
 
   registerServiceWorker();
 }

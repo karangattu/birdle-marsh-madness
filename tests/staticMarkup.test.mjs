@@ -90,6 +90,18 @@ test('opening screen shows regular and expert mode buttons', () => {
   assert.match(appSource, /leaderboardMode: 'expert'/);
 });
 
+test('splash includes a dismissible install prompt for non-PWA play', () => {
+  assert.match(html, /id="installPrompt"/);
+  assert.match(html, /id="installPromptInstall"/);
+  assert.match(html, /id="installPromptDismiss"/);
+  assert.match(appSource, /beforeinstallprompt/);
+  assert.match(appSource, /appinstalled/);
+  assert.match(appSource, /display-mode:\s*standalone/);
+  assert.match(appSource, /INSTALL_PROMPT_DISMISS_KEY/);
+  assert.match(appSource, /sessionStorage/);
+  assert.match(styles, /\.install-prompt/);
+});
+
 test('result screen includes a top five leaderboard panel', () => {
   assert.match(html, /id="resultLeaderboard"/);
   assert.match(html, /id="resultLeaderboardList"/);

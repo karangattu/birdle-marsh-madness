@@ -102,6 +102,66 @@ body {
   order: 2;
 }
 
+.install-prompt {
+  width: min(100%, 560px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, rgba(8, 24, 20, 0.9), rgba(6, 19, 17, 0.98));
+  border: 1px solid rgba(246, 196, 83, 0.22);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.24);
+  text-align: left;
+  order: 3;
+}
+
+.install-prompt-copy {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.install-prompt-kicker {
+  color: var(--accent);
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.9px;
+  text-transform: uppercase;
+}
+
+.install-prompt-copy strong {
+  color: var(--text);
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
+.install-prompt-copy p {
+  margin: 0;
+  color: var(--text-dim);
+  font-size: 0.74rem;
+  line-height: 1.35;
+}
+
+.install-prompt-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.install-prompt-install {
+  min-width: 120px;
+  padding: 10px 14px;
+  font-size: 0.86rem;
+}
+
+.install-prompt-dismiss {
+  padding: 10px 14px;
+  font-size: 0.86rem;
+}
+
 .mode-selector {
   display: flex;
   gap: 6px;
@@ -1630,6 +1690,14 @@ body {
   .mode-button small { font-size: 0.58rem; }
   .mode-button strong,
   .mode-option strong { font-size: 0.68rem; }
+  .install-prompt {
+    padding: 8px 10px;
+    gap: 8px;
+  }
+  .install-prompt-copy strong { font-size: 0.78rem; }
+  .install-prompt-copy p { font-size: 0.62rem; }
+  .install-prompt-install,
+  .install-prompt-dismiss { min-width: 0; padding: 6px 10px; font-size: 0.68rem; }
   .leaderboard-entry { min-height: 32px; padding: 5px 7px; }
   .leaderboard-detail strong { font-size: 0.72rem; }
   .leaderboard-detail small { display: none; }
@@ -1724,6 +1792,18 @@ body {
   .top-bar { padding: 10px 12px; }
   .hud { gap: 6px; }
   .scope-tools { order: 2; width: 100%; justify-content: center; }
+  .install-prompt {
+    width: min(100%, 360px);
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .install-prompt-actions {
+    justify-content: flex-start;
+  }
+  .install-prompt-install,
+  .install-prompt-dismiss {
+    width: 100%;
+  }
   .hud-meter { padding: 4px 10px; min-width: 54px; }
   .hud-meter strong { font-size: 1rem; }
   .brand-title { font-size: 0.95rem; letter-spacing: 0.5px; }
