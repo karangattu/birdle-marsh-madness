@@ -1684,20 +1684,35 @@ body {
   .title-lockup { gap: 6px; }
   .brand-title { font-size: 0.85rem; }
   .mode-pill { padding: 3px 7px; font-size: 0.6rem; }
-  .splash-bottom-bar { gap: 8px; padding: 8px 10px; }
+  .splash-bottom-bar {
+    gap: 4px;
+    padding: 6px 10px;
+    background: linear-gradient(180deg, rgba(6, 19, 17, 0.5) 0%, rgba(6, 19, 17, 0.9) 6%, rgba(6, 19, 17, 0.97) 100%);
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+  }
   .mode-selector { gap: 4px; padding: 4px; }
   .mode-button { min-width: 94px; padding: 6px 9px; font-size: 0.68rem; }
   .mode-button small { font-size: 0.58rem; }
   .mode-button strong,
   .mode-option strong { font-size: 0.68rem; }
+  .primary-action { padding: 9px 20px; font-size: 0.85rem; }
+  .splash-actions { gap: 6px; order: 1; }
   .install-prompt {
-    padding: 8px 10px;
-    gap: 8px;
+    order: 2;
+    width: 100%;
+    padding: 5px 8px;
+    gap: 6px;
+    border-radius: 12px;
   }
-  .install-prompt-copy strong { font-size: 0.78rem; }
-  .install-prompt-copy p { font-size: 0.62rem; }
+  .install-prompt-copy strong { font-size: 0.72rem; }
+  .install-prompt-copy p { font-size: 0.6rem; line-height: 1.2; }
   .install-prompt-install,
-  .install-prompt-dismiss { min-width: 0; padding: 6px 10px; font-size: 0.68rem; }
+  .install-prompt-dismiss { min-width: 0; padding: 5px 9px; font-size: 0.62rem; }
+  .install-prompt-kicker { font-size: 0.55rem; }
+  .splash-best { order: 3; width: 100%; font-size: 0.72rem; gap: 4px; }
   .leaderboard-entry { min-height: 32px; padding: 5px 7px; }
   .leaderboard-detail strong { font-size: 0.72rem; }
   .leaderboard-detail small { display: none; }
