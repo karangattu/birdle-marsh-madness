@@ -34,6 +34,11 @@ test('leaderboard SQL enables public read and insert policies for anon clients',
   assert.match(sql, /mode in \('regular', 'expert'\)/);
 });
 
+test('leaderboard SQL grants the anon role explicit table access', async () => {
+  const sql = await readLeaderboardSql();
+  assert.match(sql, /grant select, insert, update on public\.marsh_madness_leaderboard to anon/);
+});
+
 test('leaderboard SQL upgrades existing tables with player labels', async () => {
   const sql = await readLeaderboardSql();
   assert.match(sql, /alter table public\.marsh_madness_leaderboard\s+add column if not exists player_label text/);

@@ -114,52 +114,212 @@ alter table public.marsh_madness_leaderboard enable row level security;
 
 grant select, insert, update on public.marsh_madness_leaderboard to anon;
 
-drop policy if exists "Public leaderboard read access" on public.marsh_madness_leaderboard;
-create policy "Public leaderboard read access"
-on public.marsh_madness_leaderboard
-for select
-to anon
-using (true);
+do $$
+declare
+  existing_cmd text;
+begin
+  select cmd
+  into existing_cmd
+  from pg_policies
+  where schemaname = 'public'
+    and tablename = 'marsh_madness_leaderboard'
+    and policyname = 'Public leaderboard read access'
+  limit 1;
 
-drop policy if exists "Public leaderboard score submissions" on public.marsh_madness_leaderboard;
-create policy "Public leaderboard score submissions"
-on public.marsh_madness_leaderboard
-for insert
-to anon
-with check (
-  mode in ('regular', 'expert')
-  and char_length(btrim(player_label)) between 1 and 40
-  and score >= 0
-  and score <= 100000
-  and found_count >= 0
-  and total_birds > 0
-  and total_birds <= 64
-  and found_count <= total_birds
-  and misses >= 0
-  and misses <= 999
-  and (finished_seconds is null or finished_seconds between 0 and 60)
-);
+  if existing_cmd = 'r' then
+    execute $policy$
+      alter policy "Public leaderboard read access"
+      on public.marsh_madness_leaderboard
+      to anon
+      using (true)
+    $policy$;
+  elsif existing_cmd is not null then
+    execute $policy$
+      drop policy "Public leaderboard read access"
+      on public.marsh_madness_leaderboard
+    $policy$;
+    execute $policy$
+      create policy "Public leaderboard read access"
+      on public.marsh_madness_leaderboard
+      for select
+      to anon
+      using (true)
+    $policy$;
+  else
+    execute $policy$
+      create policy "Public leaderboard read access"
+      on public.marsh_madness_leaderboard
+      for select
+      to anon
+      using (true)
+    $policy$;
+  end if;
+end;
+$$;
 
-drop policy if exists "Public leaderboard score updates" on public.marsh_madness_leaderboard;
-create policy "Public leaderboard score updates"
-on public.marsh_madness_leaderboard
-for update
-to anon
-using (mode in ('regular', 'expert'))
-with check (
-  mode in ('regular', 'expert')
-  and player_key = lower(btrim(player_label))
-  and char_length(btrim(player_label)) between 1 and 40
-  and score >= 0
-  and score <= 100000
-  and found_count >= 0
-  and total_birds > 0
-  and total_birds <= 64
-  and found_count <= total_birds
-  and misses >= 0
-  and misses <= 999
-  and (finished_seconds is null or finished_seconds between 0 and 60)
-);
+do $$
+declare
+  existing_cmd text;
+begin
+  select cmd
+  into existing_cmd
+  from pg_policies
+  where schemaname = 'public'
+    and tablename = 'marsh_madness_leaderboard'
+    and policyname = 'Public leaderboard score submissions'
+  limit 1;
+
+  if existing_cmd = 'a' then
+    execute $policy$
+      alter policy "Public leaderboard score submissions"
+      on public.marsh_madness_leaderboard
+      to anon
+      with check (
+        mode in ('regular', 'expert')
+        and char_length(btrim(player_label)) between 1 and 40
+        and score >= 0
+        and score <= 100000
+        and found_count >= 0
+        and total_birds > 0
+        and total_birds <= 64
+        and found_count <= total_birds
+        and misses >= 0
+        and misses <= 999
+        and (finished_seconds is null or finished_seconds between 0 and 60)
+      )
+    $policy$;
+  elsif existing_cmd is not null then
+    execute $policy$
+      drop policy "Public leaderboard score submissions"
+      on public.marsh_madness_leaderboard
+    $policy$;
+    execute $policy$
+      create policy "Public leaderboard score submissions"
+      on public.marsh_madness_leaderboard
+      for insert
+      to anon
+      with check (
+        mode in ('regular', 'expert')
+        and char_length(btrim(player_label)) between 1 and 40
+        and score >= 0
+        and score <= 100000
+        and found_count >= 0
+        and total_birds > 0
+        and total_birds <= 64
+        and found_count <= total_birds
+        and misses >= 0
+        and misses <= 999
+        and (finished_seconds is null or finished_seconds between 0 and 60)
+      )
+    $policy$;
+  else
+    execute $policy$
+      create policy "Public leaderboard score submissions"
+      on public.marsh_madness_leaderboard
+      for insert
+      to anon
+      with check (
+        mode in ('regular', 'expert')
+        and char_length(btrim(player_label)) between 1 and 40
+        and score >= 0
+        and score <= 100000
+        and found_count >= 0
+        and total_birds > 0
+        and total_birds <= 64
+        and found_count <= total_birds
+        and misses >= 0
+        and misses <= 999
+        and (finished_seconds is null or finished_seconds between 0 and 60)
+      )
+    $policy$;
+  end if;
+end;
+$$;
+
+do $$
+declare
+  existing_cmd text;
+begin
+  select cmd
+  into existing_cmd
+  from pg_policies
+  where schemaname = 'public'
+    and tablename = 'marsh_madness_leaderboard'
+    and policyname = 'Public leaderboard score updates'
+  limit 1;
+
+  if existing_cmd = 'w' then
+    execute $policy$
+      alter policy "Public leaderboard score updates"
+      on public.marsh_madness_leaderboard
+      to anon
+      using (mode in ('regular', 'expert'))
+      with check (
+        mode in ('regular', 'expert')
+        and player_key = lower(btrim(player_label))
+        and char_length(btrim(player_label)) between 1 and 40
+        and score >= 0
+        and score <= 100000
+        and found_count >= 0
+        and total_birds > 0
+        and total_birds <= 64
+        and found_count <= total_birds
+        and misses >= 0
+        and misses <= 999
+        and (finished_seconds is null or finished_seconds between 0 and 60)
+      )
+    $policy$;
+  elsif existing_cmd is not null then
+    execute $policy$
+      drop policy "Public leaderboard score updates"
+      on public.marsh_madness_leaderboard
+    $policy$;
+    execute $policy$
+      create policy "Public leaderboard score updates"
+      on public.marsh_madness_leaderboard
+      for update
+      to anon
+      using (mode in ('regular', 'expert'))
+      with check (
+        mode in ('regular', 'expert')
+        and player_key = lower(btrim(player_label))
+        and char_length(btrim(player_label)) between 1 and 40
+        and score >= 0
+        and score <= 100000
+        and found_count >= 0
+        and total_birds > 0
+        and total_birds <= 64
+        and found_count <= total_birds
+        and misses >= 0
+        and misses <= 999
+        and (finished_seconds is null or finished_seconds between 0 and 60)
+      )
+    $policy$;
+  else
+    execute $policy$
+      create policy "Public leaderboard score updates"
+      on public.marsh_madness_leaderboard
+      for update
+      to anon
+      using (mode in ('regular', 'expert'))
+      with check (
+        mode in ('regular', 'expert')
+        and player_key = lower(btrim(player_label))
+        and char_length(btrim(player_label)) between 1 and 40
+        and score >= 0
+        and score <= 100000
+        and found_count >= 0
+        and total_birds > 0
+        and total_birds <= 64
+        and found_count <= total_birds
+        and misses >= 0
+        and misses <= 999
+        and (finished_seconds is null or finished_seconds between 0 and 60)
+      )
+    $policy$;
+  end if;
+end;
+$$;
 
 create unique index if not exists marsh_madness_leaderboard_mode_player_key_idx
 on public.marsh_madness_leaderboard (mode, player_key);
