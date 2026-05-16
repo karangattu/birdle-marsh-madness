@@ -592,7 +592,15 @@ function isTouchDevice() {
 
 function readInstallPromptDismissed() {
   try {
-    return sessionStorage.getItem(INSTALL_PROMPT_DISMISS_KEY) === '1';
+    const raw = localStorage.getItem(INSTALL_PROMPT_DISMISS_KEY);
+    if (!raw) return false;
+    const { dismissedAt } = JSON.parse(raw);
+    const daysSinceDismiss = (Date.now() - dismissedAt) / (1000 * 60 * 60 * 24);
+    if (daysSinceDismiss >= 30) {
+      localStorage.removeItem(INSTALL_PROMPT_DISMISS_KEY);
+      return false;
+    }
+    return true;
   } catch {
     return false;
   }
@@ -601,9 +609,9 @@ function readInstallPromptDismissed() {
 function writeInstallPromptDismissed(isDismissed) {
   try {
     if (isDismissed) {
-      sessionStorage.setItem(INSTALL_PROMPT_DISMISS_KEY, '1');
+      localStorage.setItem(INSTALL_PROMPT_DISMISS_KEY, JSON.stringify({ dismissedAt: Date.now() }));
     } else {
-      sessionStorage.removeItem(INSTALL_PROMPT_DISMISS_KEY);
+      localStorage.removeItem(INSTALL_PROMPT_DISMISS_KEY);
     }
   } catch {
     /* ignore */
