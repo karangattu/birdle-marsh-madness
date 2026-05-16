@@ -98,7 +98,7 @@ test('splash includes a dismissible install prompt for non-PWA play', () => {
   assert.match(appSource, /appinstalled/);
   assert.match(appSource, /display-mode:\s*standalone/);
   assert.match(appSource, /INSTALL_PROMPT_DISMISS_KEY/);
-  assert.match(appSource, /sessionStorage/);
+  assert.match(appSource, /localStorage/);
   assert.match(styles, /\.install-prompt/);
 });
 
