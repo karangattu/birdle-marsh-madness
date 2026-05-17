@@ -144,6 +144,10 @@ function showScreen(name) {
   } else {
     pauseTutorialAmbience();
   }
+  if (name !== 'result') {
+    stopLeaderboardPoll();
+    resetLeaderboardNameForm();
+  }
   activeScreen = name;
   if (name === 'tutorial') {
     resetTutorialDemo();
@@ -188,6 +192,7 @@ let lastHud = { remainingSeconds: GAME_MODE_LENGTH_SECONDS[GAME_MODES.standard],
 let foundCueContext = null;
 let pendingLeaderboardEntry = null;
 let leaderboardNameRequestId = 0;
+let leaderboardPollTimer = null;
 
 // ---------------- Setup splash best-time ----------------
 function refreshBestTimeLabel() {
@@ -352,6 +357,21 @@ async function refreshLeaderboard(mode, targets) {
   }
 }
 
+function startLeaderboardPoll(mode) {
+  stopLeaderboardPoll();
+  leaderboardPollTimer = setInterval(() => {
+    const gameMode = gameModeForLeaderboardMode(mode);
+    refreshLeaderboard(gameMode, ['result']).catch(() => {});
+  }, 15000);
+}
+
+function stopLeaderboardPoll() {
+  if (leaderboardPollTimer) {
+    clearInterval(leaderboardPollTimer);
+    leaderboardPollTimer = null;
+  }
+}
+
 function renderLeaderboard(target, mode, entries = leaderboardCache.get(mode) ?? []) {
   const slot = getLeaderboardSlot(target, mode);
   if (!slot) return;
@@ -430,6 +450,7 @@ function makeLeaderboardEntryPayload(finalScore, seconds, won, mode, playerLabel
   return {
     mode: leaderboardModeForGameMode(gameMode),
     player_label: playerLabel,
+    player_key: normalizeLeaderboardPlayerKey(playerLabel),
     score: finalScore,
     found_count: state.foundIds.size,
     total_birds: state.birds.length,
@@ -492,7 +513,7 @@ function showLeaderboardNameForm(mode, finalScore) {
   const modeLabel = getModeDetail(gameMode).label;
   els.leaderboardNameTitle.textContent = `${modeLabel} Top 5 score`;
   els.leaderboardNameHelp.textContent = `Save ${finalScore} points to the ${modeLabel} leaderboard.`;
-  els.leaderboardPlayerName.value = readPlayerLabel();
+  els.leaderboardPlayerName.value = '';
   els.leaderboardNameStatus.textContent = '';
   els.leaderboardNameSubmit.disabled = false;
   els.leaderboardNameSubmit.textContent = 'Save score';
@@ -1317,6 +1338,7 @@ function showResultScreen() {
 
   showScreen('result');
   refreshBestTimeLabel();
+  startLeaderboardPoll(leaderboardModeForGameMode(mode));
   prepareLeaderboardNameEntry(finalScore, seconds, won, mode);
 }
 
