@@ -192,13 +192,59 @@ let lastHud = { remainingSeconds: GAME_MODE_LENGTH_SECONDS[GAME_MODES.standard],
 let foundCueContext = null;
 let pendingLeaderboardEntry = null;
 let leaderboardNameRequestId = 0;
+let realtimeChannel = null;
+let supabaseClient = null;
 let leaderboardPollTimer = null;
+let previousLeaderboardKeys = new Map(GAME_MODE_ORDER.map((mode) => [mode, []]));
 
-// ---------------- Setup splash best-time ----------------
-function refreshBestTimeLabel() {
-  updateModeBestLabels();
-  els.splashBest.hidden = true;
-  els.splashBest.textContent = '';
+function getSupabaseClient() {
+  if (supabaseClient) return supabaseClient;
+  try {
+    if (window.supabase && window.supabase.createClient) {
+      supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+        realtime: { params: { eventsPerSecond: 1 } },
+      });
+    }
+  } catch { /* realtime unavailable */ }
+  return supabaseClient;
+}
+
+function startLeaderboardPoll(mode) {
+  stopLeaderboardPoll();
+  const gameMode = gameModeForLeaderboardMode(mode);
+  const modeStr = leaderboardModeForGameMode(gameMode);
+  const client = getSupabaseClient();
+  if (client) {
+    try {
+      const channel = client
+        .channel('leaderboard-realtime')
+        .on('postgres_changes', { event: '*', schema: 'public', table: LEADERBOARD_TABLE, filter: `mode=eq.${modeStr}` }, () => {
+          if (activeScreen === 'result') {
+            refreshLeaderboard(gameMode, ['result']).catch(() => {});
+          }
+        })
+        .subscribe();
+      realtimeChannel = { channel };
+      return;
+    } catch { /* fall through to polling */ }
+  }
+  leaderboardPollTimer = setInterval(() => {
+    const gameMode = gameModeForLeaderboardMode(mode);
+    refreshLeaderboard(gameMode, ['result']).catch(() => {});
+  }, 15000);
+}
+
+function stopLeaderboardPoll() {
+  if (realtimeChannel) {
+    try {
+      realtimeChannel.channel.unsubscribe();
+    } catch { /* ignore */ }
+    realtimeChannel = null;
+  }
+  if (leaderboardPollTimer) {
+    clearInterval(leaderboardPollTimer);
+    leaderboardPollTimer = null;
+  }
 }
 
 function readBest(mode = GAME_MODES.standard) {
@@ -357,21 +403,6 @@ async function refreshLeaderboard(mode, targets) {
   }
 }
 
-function startLeaderboardPoll(mode) {
-  stopLeaderboardPoll();
-  leaderboardPollTimer = setInterval(() => {
-    const gameMode = gameModeForLeaderboardMode(mode);
-    refreshLeaderboard(gameMode, ['result']).catch(() => {});
-  }, 15000);
-}
-
-function stopLeaderboardPoll() {
-  if (leaderboardPollTimer) {
-    clearInterval(leaderboardPollTimer);
-    leaderboardPollTimer = null;
-  }
-}
-
 function renderLeaderboard(target, mode, entries = leaderboardCache.get(mode) ?? []) {
   const slot = getLeaderboardSlot(target, mode);
   if (!slot) return;
@@ -382,12 +413,20 @@ function renderLeaderboard(target, mode, entries = leaderboardCache.get(mode) ??
   const topEntries = selectUniqueLeaderboardEntries(entries, LEADERBOARD_LIMIT);
   if (topEntries.length === 0) {
     setLeaderboardStatus(target, mode, 'No scores yet');
+    previousLeaderboardKeys.set(gameMode, []);
     return;
   }
 
+  const prevKeys = previousLeaderboardKeys.get(gameMode) ?? [];
+  const currentKeys = topEntries.map((e) => normalizeLeaderboardPlayerKey(e.player_label));
+  previousLeaderboardKeys.set(gameMode, currentKeys);
+
   const fragment = document.createDocumentFragment();
   topEntries.forEach((entry, index) => {
-    fragment.appendChild(makeLeaderboardEntry(entry, index));
+    const el = makeLeaderboardEntry(entry, index);
+    const isNew = !prevKeys.includes(normalizeLeaderboardPlayerKey(entry.player_label));
+    if (isNew && prevKeys.length > 0) el.classList.add('is-new-entry');
+    fragment.appendChild(el);
   });
   slot.list.appendChild(fragment);
   setLeaderboardStatus(target, mode, '');

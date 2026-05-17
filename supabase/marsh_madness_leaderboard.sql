@@ -329,3 +329,6 @@ on public.marsh_madness_leaderboard (mode, score desc, created_at asc);
 
 create index if not exists marsh_madness_leaderboard_recent_idx
 on public.marsh_madness_leaderboard (created_at desc);
+
+-- Enable Supabase Realtime for instant leaderboard updates
+alter publication supabase_realtime add table public.marsh_madness_leaderboard;
