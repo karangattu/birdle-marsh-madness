@@ -78,11 +78,19 @@ const els = {
   introSkip: $('introSkip'),
   tutorialDemo: $('tutorialDemo'),
   tutorialDemoScope: $('tutorialDemoScope'),
+  tutorialHeading: $('tutorialHeading'),
+  tutorialStepHint: $('tutorialStepHint'),
+  tutorialStepDrag: $('tutorialStepDrag'),
+  tutorialStepFind: $('tutorialStepFind'),
+  tutorialStepGuess: $('tutorialStepGuess'),
+  tutorialDemoButtons: document.querySelector('.tutorial-demo-buttons'),
   demoMallardButton: $('demoMallardButton'),
   tutorialStart: $('tutorialStart'),
   tutorialSkip: $('tutorialSkip'),
   tutorialBack: $('tutorialBack'),
   marshStage: $('marshStage'),
+  countdownOverlay: $('countdownOverlay'),
+  countdownNumber: $('countdownNumber'),
   distantBirds: $('distantBirds'),
   magnifiedBirds: $('magnifiedBirds'),
   eyepiece: $('eyepiece'),
@@ -182,6 +190,7 @@ let feedbackTimer = null;
 let pointerGrabId = null;
 let currentZoom = DEFAULT_ZOOM;
 let tutorialScopePos = { x: 0.24, y: 0.58 };
+let tutorialStep = 0;
 let tutorialPointerId = null;
 let tutorialPointerCaptureEl = null;
 let tutorialMallardClicked = false;
@@ -245,6 +254,13 @@ function stopLeaderboardPoll() {
     clearInterval(leaderboardPollTimer);
     leaderboardPollTimer = null;
   }
+}
+
+// ---------------- Setup splash best-time ----------------
+function refreshBestTimeLabel() {
+  updateModeBestLabels();
+  els.splashBest.hidden = true;
+  els.splashBest.textContent = '';
 }
 
 function readBest(mode = GAME_MODES.standard) {
@@ -884,12 +900,46 @@ function attachStageListeners() {
 // ---------------- Tutorial demo ----------------
 function resetTutorialDemo() {
   if (!els.tutorialDemo) return;
+  tutorialStep = 0;
   tutorialMallardClicked = false;
   tutorialScopePos = { x: 0.24, y: 0.58 };
   els.tutorialDemo.classList.remove('is-on-target', 'is-dragging', 'needs-target');
   els.demoMallardButton.classList.remove('is-highlighted', 'is-found');
+  els.tutorialHeading.textContent = 'Line up a sighting';
+  els.tutorialStepHint.classList.remove('is-hidden');
+  if (els.tutorialDemoButtons) els.tutorialDemoButtons.hidden = true;
   setTutorialStartEnabled(false);
   applyTutorialScopeStyle();
+  resetTutorialStepUI();
+}
+
+function resetTutorialStepUI() {
+  const steps = [els.tutorialStepDrag, els.tutorialStepFind, els.tutorialStepGuess];
+  steps.forEach((el, i) => {
+    if (!el) return;
+    el.classList.remove('is-active', 'is-done');
+    if (i === 0) el.classList.add('is-active');
+  });
+}
+
+function advanceTutorialStep() {
+  if (tutorialStep >= 3) return;
+  const stepEls = [els.tutorialStepDrag, els.tutorialStepFind, els.tutorialStepGuess];
+  stepEls[tutorialStep]?.classList.remove('is-active');
+  stepEls[tutorialStep]?.classList.add('is-done');
+  tutorialStep++;
+  if (tutorialStep < 3) {
+    stepEls[tutorialStep]?.classList.add('is-active');
+    stepEls[tutorialStep]?.classList.remove('is-done');
+  }
+  if (tutorialStep >= 1) {
+    if (els.tutorialDemoButtons) els.tutorialDemoButtons.hidden = false;
+    els.tutorialStepHint.classList.add('is-hidden');
+    els.tutorialHeading.textContent = 'Find the bird';
+  }
+  if (tutorialStep >= 2) {
+    els.tutorialHeading.textContent = 'Make the call';
+  }
 }
 
 function setTutorialStartEnabled(enabled) {
@@ -919,10 +969,12 @@ function updateTutorialFocus(rect = els.tutorialDemo.getBoundingClientRect()) {
   const isOnTarget = Math.hypot(dx, dy) <= Math.min(rect.width, rect.height) * 0.14;
   els.tutorialDemo.classList.toggle('is-on-target', isOnTarget);
   els.demoMallardButton.classList.toggle('is-highlighted', isOnTarget);
+  if (isOnTarget && tutorialStep === 1) advanceTutorialStep();
 }
 
 function onTutorialPointerDown(e) {
   e.stopPropagation();
+  if (tutorialStep === 0) advanceTutorialStep();
   tutorialPointerId = e.pointerId;
   tutorialPointerCaptureEl = e.currentTarget;
   try { tutorialPointerCaptureEl.setPointerCapture?.(e.pointerId); } catch { /* ignore */ }
@@ -964,6 +1016,10 @@ function onDemoMallardClick() {
     if (tutorialNudgeTimer) clearTimeout(tutorialNudgeTimer);
     tutorialNudgeTimer = setTimeout(() => els.tutorialDemo.classList.remove('needs-target'), 700);
     return;
+  }
+  if (tutorialStep === 2) {
+    advanceTutorialStep();
+    els.tutorialHeading.textContent = "You're ready!";
   }
   tutorialMallardClicked = true;
   els.demoMallardButton.classList.add('is-found');
@@ -1257,15 +1313,35 @@ function startRound(mode = selectedMode) {
   setZoom(currentZoom);
   lastHud = { remainingSeconds: state.roundLengthSeconds, foundCount: 0, misses: 0 };
   refreshHud();
-  playMarshAmbience();
 
-  // Recompute stage rect after layout settles, then start the loop.
-  requestAnimationFrame(() => {
-    stageRect = els.marshStage.getBoundingClientRect();
-    updateFocus();
-    if (rafId) cancelAnimationFrame(rafId);
-    loop();
+  // Show countdown overlay
+  els.countdownOverlay.hidden = false;
+
+  runCountdown(() => {
+    els.countdownOverlay.hidden = true;
+    playMarshAmbience();
+    requestAnimationFrame(() => {
+      stageRect = els.marshStage.getBoundingClientRect();
+      updateFocus();
+      if (rafId) cancelAnimationFrame(rafId);
+      loop();
+    });
   });
+}
+
+function runCountdown(onDone) {
+  const steps = ['3', '2', '1', 'Go!'];
+  let i = 0;
+  function next() {
+    if (i >= steps.length) { onDone(); return; }
+    els.countdownNumber.textContent = steps[i];
+    els.countdownNumber.classList.remove('is-pulse');
+    void els.countdownNumber.offsetWidth;
+    els.countdownNumber.classList.add('is-pulse');
+    i++;
+    setTimeout(next, i >= steps.length ? 500 : 900);
+  }
+  next();
 }
 
 function loop() {

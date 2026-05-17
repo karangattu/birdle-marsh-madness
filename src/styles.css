@@ -437,23 +437,52 @@ body {
 
 .tutorial-steps {
   list-style: none;
-  margin: 0;
+  margin: 0 0 14px;
   padding: 0;
   display: grid;
-  gap: 16px;
+  gap: 0;
+  counter-reset: step-counter;
 }
 
-.tutorial-steps li {
+.tutorial-step {
   display: grid;
   grid-template-columns: auto 1fr;
   gap: 14px;
   align-items: flex-start;
-  font-size: 1rem;
+  font-size: 0.94rem;
   line-height: 1.45;
-  color: var(--text);
+  color: var(--text-dim);
+  padding: 10px 14px;
+  border-radius: 12px;
+  transition: color 250ms ease, background-color 250ms ease;
 }
 
-.tutorial-steps strong { color: var(--accent); }
+.tutorial-step.is-active {
+  color: var(--text);
+  background: rgba(246, 196, 83, 0.1);
+}
+
+.tutorial-step.is-done {
+  color: var(--good);
+}
+
+.tutorial-step.is-done .step-num {
+  background: linear-gradient(135deg, var(--good), #a2f0b0);
+  color: transparent;
+}
+
+.tutorial-step.is-done .step-num::after {
+  content: '✓';
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-weight: 900;
+  font-size: 1rem;
+  color: #07211c;
+}
+
+.tutorial-step strong { color: inherit; }
 
 .step-num {
   width: 32px;
@@ -466,6 +495,17 @@ body {
   place-items: center;
   font-size: 0.95rem;
   flex-shrink: 0;
+  position: relative;
+}
+
+.tutorial-step.is-active .step-num {
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  color: #1a1306;
+}
+
+.tutorial-step:not(.is-active):not(.is-done) .step-num {
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--text-dim);
 }
 
 .tutorial-actions {
@@ -590,26 +630,25 @@ body {
   z-index: 4;
 }
 
-.tutorial-cues {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
-  margin-top: 14px;
-}
-
-.tutorial-cue {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-height: 46px;
-  padding: 10px 12px;
+.tutorial-step-hint {
+  position: absolute;
+  bottom: clamp(12px, 3vmin, 20px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 6;
+  background: rgba(0, 0, 0, 0.7);
+  color: var(--accent);
+  font-size: 0.82rem;
+  padding: 6px 18px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.07);
-  color: var(--text);
-  font-size: 0.9rem;
+  border: 1px solid rgba(246, 196, 83, 0.3);
+  pointer-events: none;
+  white-space: nowrap;
+  transition: opacity 300ms ease;
 }
 
-.tutorial-cue .icon { color: var(--accent); }
+.tutorial-demo.is-dragging .tutorial-step-hint,
+.tutorial-step-hint.is-hidden { opacity: 0; }
 
 .tutorial-demo-buttons {
   display: grid;
@@ -617,6 +656,8 @@ body {
   gap: 8px;
   margin-top: 12px;
 }
+
+.tutorial-demo-buttons[hidden] { display: none; }
 
 .demo-button {
   min-height: 42px;
@@ -750,6 +791,39 @@ body {
 .screen-game {
   background: linear-gradient(180deg, #07211c 0%, #051210 100%);
   padding: 0;
+  position: relative;
+}
+
+/* ---- Countdown ---- */
+.countdown-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  background: rgba(6, 19, 17, 0.88);
+  backdrop-filter: blur(10px);
+}
+
+.countdown-overlay[hidden] { display: none; }
+
+.countdown-number {
+  font-size: clamp(80px, 25vmin, 160px);
+  font-weight: 900;
+  color: var(--accent);
+  text-shadow: 0 0 60px rgba(246, 196, 83, 0.5);
+  line-height: 1;
+}
+
+.countdown-number.is-pulse {
+  animation: countdown-pop 0.7s cubic-bezier(0.18, 0.89, 0.32, 1.1);
+}
+
+@keyframes countdown-pop {
+  0%   { transform: scale(1.5); opacity: 0; }
+  25%  { transform: scale(0.9); opacity: 1; }
+  40%  { transform: scale(1.05); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
 }
 
 .orientation-guard {
@@ -1765,14 +1839,15 @@ body {
   }
   .tutorial-demo-scope { width: 104px; height: 104px; }
   .tutorial-demo-tool { width: 170px; }
-  .tutorial-cues {
+  .tutorial-steps {
     grid-column: 2;
     grid-row: 2;
     grid-template-columns: 1fr;
     gap: 4px;
     margin-top: 0;
   }
-  .tutorial-cue { min-height: 30px; padding: 5px 8px; font-size: 0.74rem; }
+  .tutorial-step { min-height: 30px; padding: 5px 8px; font-size: 0.74rem; gap: 8px; }
+  .step-num { width: 24px; height: 24px; font-size: 0.78rem; }
   .tutorial-demo-buttons {
     grid-column: 2;
     grid-row: 3;

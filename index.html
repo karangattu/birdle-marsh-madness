@@ -71,7 +71,21 @@
       <!-- Tutorial -->
       <section class="screen screen-tutorial" id="tutorialScreen" aria-label="How to play" hidden>
         <div class="tutorial-card visual-tutorial">
-          <h2>Try one sighting</h2>
+          <h2 id="tutorialHeading">Line up a sighting</h2>
+          <ol class="tutorial-steps" id="tutorialSteps">
+            <li id="tutorialStepDrag" class="tutorial-step is-active">
+              <span class="step-num">1</span>
+              <span>Drag the scope anywhere on the marsh to look through the eyepiece</span>
+            </li>
+            <li id="tutorialStepFind" class="tutorial-step">
+              <span class="step-num">2</span>
+              <span>Line up the scope on the <strong>Mallard</strong> — the button will glow when you're on target</span>
+            </li>
+            <li id="tutorialStepGuess" class="tutorial-step">
+              <span class="step-num">3</span>
+              <span>Tap the glowing <strong>Mallard</strong> button to identify the bird</span>
+            </li>
+          </ol>
           <div class="tutorial-demo" id="tutorialDemo" role="application" aria-label="Practice dragging the eyepiece to the Mallard">
             <img class="tutorial-demo-bg" src="assets/marsh_backdrop.png" alt="" />
             <img class="tutorial-demo-bird" src="assets/mallard.png" alt="Mallard" />
@@ -83,22 +97,9 @@
             </div>
             <div class="tutorial-demo-scope" id="tutorialDemoScope"><div class="eyepiece-glare"></div></div>
             <img class="tutorial-demo-tool" src="assets/looking_through_scope.png" alt="" />
+            <div class="tutorial-step-hint" id="tutorialStepHint">Drag anywhere on the marsh to look around</div>
           </div>
-          <div class="tutorial-cues">
-            <div class="tutorial-cue">
-              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2v20" /><path d="M2 12h20" /><path d="m19 15 3-3-3-3" /><path d="m5 9-3 3 3 3" /><path d="m15 5-3-3-3 3" /><path d="m9 19 3 3 3-3" /></svg>
-              Drag the scope
-            </div>
-            <div class="tutorial-cue">
-              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></svg>
-              Find the bird in the eyepiece
-            </div>
-            <div class="tutorial-cue">
-              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5" /></svg>
-              Guess from the buttons
-            </div>
-          </div>
-          <div class="tutorial-demo-buttons">
+          <div class="tutorial-demo-buttons" hidden>
             <button class="bird-button demo-button" id="demoMallardButton" type="button">Mallard</button>
             <button class="bird-button demo-button dim" type="button">Great Egret</button>
             <button class="bird-button demo-button dim" type="button">Song Sparrow</button>
@@ -116,6 +117,10 @@
 
       <!-- Game -->
       <section class="screen screen-game" id="gameScreen" aria-label="Game in progress" hidden>
+        <!-- Countdown overlay -->
+        <div class="countdown-overlay" id="countdownOverlay" hidden>
+          <div class="countdown-number" id="countdownNumber">3</div>
+        </div>
         <header class="top-bar">
           <div class="title-lockup">
             <h1 class="brand-title">Marsh Madness</h1>
