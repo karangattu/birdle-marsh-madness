@@ -178,8 +178,8 @@ test('each start or replay path shows the intro before the tutorial and keeps vi
   assert.match(appSource, /resultRestart\.addEventListener\('click', \(\) => beginGameSequence\(\)\)/);
 });
 
-test('service worker caches the optimized intro video for replay', () => {
-  assert.match(serviceWorker, /assets\/marsh_madness_intro_optimized\.mp4/);
+test('service worker caches the intro video for replay', () => {
+  assert.match(serviceWorker, /assets\/intro_video\.mp4/);
 });
 
 test('game shows a portrait rotate guard on touch devices', () => {
@@ -203,6 +203,7 @@ test('birds and spotting scope no longer pulse or bob', () => {
 });
 
 test('service worker no longer caches superseded source assets', () => {
+  assert.doesNotMatch(serviceWorker, /marsh_madness_intro_optimized\.mp4/);
   assert.doesNotMatch(serviceWorker, /marsh_madness_intro\.mp4/);
   assert.doesNotMatch(serviceWorker, /marsh_madness_title_trimmed\.png/);
   assert.doesNotMatch(serviceWorker, /birdle_logo\.png/);

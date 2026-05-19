@@ -1,4 +1,4 @@
-const CACHE_NAME = 'birdle-marsh-madness-v18';
+const CACHE_NAME = 'birdle-marsh-madness-v19';
 
 const APP_SHELL = [
   './',
@@ -8,7 +8,7 @@ const APP_SHELL = [
   './src/app.js',
   './src/gameLogic.js',
   './assets/marsh_madness_poster.png',
-  './assets/marsh_madness_intro_optimized.mp4',
+  './assets/intro_video.mp4',
   './assets/poster.png',
   './assets/marsh_backdrop.png',
   './assets/tutorial_sound.mp3',
