@@ -379,7 +379,11 @@ async function fetchLeaderboard(mode) {
   url.searchParams.set('limit', '5');
 
   const response = await fetch(url, {
-    headers: supabaseHeaders(),
+    headers: supabaseHeaders({
+      'Cache-Control': 'no-cache',
+      'Pragma': 'no-cache',
+    }),
+    cache: 'no-store',
   });
   if (!response.ok) throw new Error(`Leaderboard fetch failed: ${response.status}`);
   const entries = await response.json();
@@ -1164,6 +1168,15 @@ function enterFullscreenMode() {
   document.documentElement.requestFullscreen().catch(() => {});
 }
 
+function unlockAudioContext() {
+  const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+  if (!AudioContextClass) return;
+  foundCueContext ??= new AudioContextClass();
+  if (foundCueContext.state === 'suspended') {
+    foundCueContext.resume().catch(() => {});
+  }
+}
+
 function playFoundCue() {
   const AudioContextClass = window.AudioContext || window.webkitAudioContext;
   if (!AudioContextClass) return;
@@ -1249,6 +1262,7 @@ function resetRoundForReplay() {
 }
 
 function beginGameSequence() {
+  unlockAudioContext();
   resetRoundForReplay();
   enterFullscreenMode();
   showScreen('intro');
@@ -1287,6 +1301,7 @@ function computeScopeArtBounds() {
 
 // ---------------- Round lifecycle ----------------
 function startRound(mode = selectedMode) {
+  unlockAudioContext();
   const gameMode = normalizeGameMode(mode);
   const modeDetail = getModeDetail(gameMode);
   enterFullscreenMode();

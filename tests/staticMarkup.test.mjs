@@ -216,3 +216,19 @@ test('portrait mode lock exists for touch devices and tutorial can scroll', () =
   assert.match(styles, /\.screen-tutorial\s*\{[\s\S]*overflow-y:\s*auto/);
   assert.match(styles, /@media \(orientation: portrait\) and \(pointer: coarse\)[\s\S]*\.global-orientation-lock\s*\{[\s\S]*display:\s*flex/);
 });
+
+test('service worker only caches same-origin requests', () => {
+  assert.match(serviceWorker, /if \(!event\.request\.url\.startsWith\(self\.location\.origin\)\) return;/);
+});
+
+test('leaderboard fetch requests disable cache', () => {
+  assert.match(appSource, /'Cache-Control': 'no-cache'/);
+  assert.match(appSource, /'Pragma': 'no-cache'/);
+  assert.match(appSource, /cache: 'no-store'/);
+});
+
+test('start and restart paths call unlockAudioContext', () => {
+  assert.match(appSource, /function unlockAudioContext\(\)/);
+  assert.match(appSource, /function beginGameSequence\(\) \{\s*unlockAudioContext\(\)/);
+  assert.match(appSource, /function startRound\([^)]*\) \{\s*unlockAudioContext\(\)/);
+});
