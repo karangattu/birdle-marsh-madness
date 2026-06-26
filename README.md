@@ -17,6 +17,8 @@ Drag a spotting scope across the marsh and identify all 12 hidden birds before t
 - Snowy Egret
 - Song Sparrow
 
+![Reference Sheet](assets/reference_sheet.png)
+
 ## Run
 
 ```bash
