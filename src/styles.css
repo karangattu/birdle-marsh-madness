@@ -1913,3 +1913,116 @@ body {
   .controls-panel { padding: 10px 12px 14px; }
   .bird-buttons { grid-template-columns: repeat(2, 1fr); }
 }
+
+/* ============== DAYLIGHT MODE (LIGHT/HIGH-CONTRAST THEME) ============== */
+body.daylight-mode {
+  background: radial-gradient(ellipse at top, #ffffff 0%, #eae7d5 100%);
+  --bg-deep: #f7f6f0;
+  --bg-soft: #eae7d5;
+  --accent: #a37200; /* Darker gold/amber to be high contrast on light background */
+  --accent-strong: #805900;
+  --good: #1a732d;
+  --bad: #b52222;
+  --text: #081a16;
+  --text-dim: #2f4540;
+  --panel: rgba(255, 255, 255, 0.9);
+  --panel-strong: rgba(255, 255, 255, 0.98);
+}
+
+body.daylight-mode .screen-splash {
+  background: #eae7d5;
+}
+
+body.daylight-mode .screen-tutorial {
+  background: linear-gradient(180deg, #f7f6f0 0%, #eae7d5 100%);
+}
+
+body.daylight-mode .screen-game {
+  background: linear-gradient(180deg, #f7f6f0 0%, #eae7d5 100%);
+}
+
+body.daylight-mode .countdown-overlay {
+  background: rgba(255, 255, 255, 0.92);
+}
+
+body.daylight-mode .screen-result {
+  background: linear-gradient(180deg, #f7f6f0 0%, #eae7d5 100%);
+}
+
+body.daylight-mode .result-card {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(245, 243, 232, 0.98));
+  border-color: rgba(163, 114, 0, 0.3);
+  box-shadow: 0 28px 74px rgba(0, 0, 0, 0.15);
+}
+
+body.daylight-mode .top-bar {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+body.daylight-mode .ghost-action {
+  background: rgba(0, 0, 0, 0.08);
+  color: var(--text);
+  border: 1px solid rgba(0, 0, 0, 0.15);
+}
+
+body.daylight-mode .ghost-action:hover {
+  background: rgba(0, 0, 0, 0.14);
+}
+
+body.daylight-mode .bird-button {
+  background:
+    linear-gradient(135deg, rgba(0, 0, 0, 0.02), rgba(0, 0, 0, 0.005)),
+    rgba(255, 255, 255, 0.88);
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  color: var(--text);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 8px 18px rgba(0, 0, 0, 0.06);
+}
+
+body.daylight-mode .bird-button:hover {
+  background:
+    linear-gradient(135deg, rgba(0, 0, 0, 0.04), rgba(0, 0, 0, 0.01)),
+    rgba(255, 255, 255, 0.95);
+  border-color: var(--accent);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 10px 24px rgba(0, 0, 0, 0.1);
+}
+
+body.daylight-mode .bird-button.is-found {
+  background:
+    linear-gradient(135deg, rgba(27, 122, 45, 0.15), rgba(27, 122, 45, 0.05)),
+    rgba(255, 255, 255, 0.95);
+  border-color: var(--good);
+  color: var(--good);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 0 0 1px rgba(27, 122, 45, 0.1), 0 10px 24px rgba(0, 0, 0, 0.08);
+}
+
+body.daylight-mode .install-prompt {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(245, 243, 232, 0.98));
+  border-color: rgba(163, 114, 0, 0.22);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.1);
+}
+
+body.daylight-mode .install-prompt-copy strong {
+  color: var(--text);
+}
+
+body.daylight-mode .install-prompt-copy p {
+  color: var(--text-dim);
+}
+
+body.daylight-mode .mode-pill {
+  border: 1px solid rgba(163, 114, 0, 0.28);
+  background: rgba(0, 0, 0, 0.04);
+  color: var(--text-dim);
+}
+
+/* Daylight toggle button icon switching */
+.daylight-toggle .moon-icon {
+  display: none;
+}
+body.daylight-mode .daylight-toggle .sun-icon {
+  display: none;
+}
+body.daylight-mode .daylight-toggle .moon-icon {
+  display: inline-block;
+}
+

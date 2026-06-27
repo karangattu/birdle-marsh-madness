@@ -232,3 +232,13 @@ test('start and restart paths call unlockAudioContext', () => {
   assert.match(appSource, /function beginGameSequence\(\) \{\s*unlockAudioContext\(\)/);
   assert.match(appSource, /function startRound\([^)]*\) \{\s*unlockAudioContext\(\)/);
 });
+
+test('daylight mode toggles and screen wake lock exist in markup and logic', () => {
+  assert.match(html, /id="splashDaylightToggle"/);
+  assert.match(html, /id="gameDaylightToggle"/);
+  assert.match(styles, /body\.daylight-mode/);
+  assert.match(appSource, /function initDaylightMode\(\)/);
+  assert.match(appSource, /async function requestWakeLock\(\)/);
+  assert.match(appSource, /function releaseWakeLock\(\)/);
+});
+

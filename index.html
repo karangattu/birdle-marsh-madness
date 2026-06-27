@@ -40,6 +40,11 @@
               <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" /><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" /><path d="M12 17h.01" /></svg>
               How to play
             </button>
+            <button id="splashDaylightToggle" class="ghost-action daylight-toggle" type="button" aria-label="Toggle daylight mode">
+              <svg class="icon sun-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+              <svg class="icon moon-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+              <span>Daylight Mode</span>
+            </button>
           </div>
 
           <div class="install-prompt" id="installPrompt" hidden role="status" aria-live="polite">
@@ -143,6 +148,11 @@
               <span>Misses</span><strong id="misses">0</strong>
             </div>
           </div>
+          <button id="gameDaylightToggle" class="ghost-action game-daylight-toggle daylight-toggle" type="button" aria-label="Toggle daylight mode">
+            <svg class="icon sun-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+            <svg class="icon moon-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+            <span>Daylight</span>
+          </button>
           <button id="quitButton" class="ghost-action game-quit-button" type="button" aria-label="Quit round and return home">
             <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
             Quit

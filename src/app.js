@@ -126,7 +126,71 @@ const els = {
   leaderboardNameStatus: $('leaderboardNameStatus'),
   resultRestart: $('resultRestart'),
   resultHome: $('resultHome'),
+  splashDaylightToggle: $('splashDaylightToggle'),
+  gameDaylightToggle: $('gameDaylightToggle'),
 };
+
+const DAYLIGHT_MODE_KEY = 'marsh-madness-daylight-mode';
+let wakeLock = null;
+
+function applyDaylightMode(enabled) {
+  if (enabled) {
+    document.body.classList.add('daylight-mode');
+    const themeColorMeta = document.querySelector('meta[name="theme-color"]');
+    if (themeColorMeta) {
+      themeColorMeta.setAttribute('content', '#f7f6f0');
+    }
+  } else {
+    document.body.classList.remove('daylight-mode');
+    const themeColorMeta = document.querySelector('meta[name="theme-color"]');
+    if (themeColorMeta) {
+      themeColorMeta.setAttribute('content', '#06211b');
+    }
+  }
+  try {
+    localStorage.setItem(DAYLIGHT_MODE_KEY, String(enabled));
+  } catch { /* ignore */ }
+}
+
+function initDaylightMode() {
+  let isEnabled = false;
+  try {
+    const saved = localStorage.getItem(DAYLIGHT_MODE_KEY);
+    isEnabled = saved === 'true';
+  } catch { /* ignore */ }
+  applyDaylightMode(isEnabled);
+
+  const toggles = [els.splashDaylightToggle, els.gameDaylightToggle];
+  for (const toggle of toggles) {
+    if (toggle) {
+      toggle.addEventListener('click', () => {
+        const currentlyEnabled = document.body.classList.contains('daylight-mode');
+        applyDaylightMode(!currentlyEnabled);
+      });
+    }
+  }
+}
+
+async function requestWakeLock() {
+  try {
+    if ('wakeLock' in navigator) {
+      wakeLock = await navigator.wakeLock.request('screen');
+      console.log('Screen Wake Lock acquired');
+      wakeLock.addEventListener('release', () => {
+        console.log('Screen Wake Lock released');
+      });
+    }
+  } catch (err) {
+    console.warn(`Screen Wake Lock error: ${err.name}, ${err.message}`);
+  }
+}
+
+function releaseWakeLock() {
+  if (wakeLock !== null) {
+    wakeLock.release();
+    wakeLock = null;
+  }
+}
 
 // ---------------- Screen state ----------------
 let activeScreen = 'splash';
@@ -1302,6 +1366,7 @@ function computeScopeArtBounds() {
 // ---------------- Round lifecycle ----------------
 function startRound(mode = selectedMode) {
   unlockAudioContext();
+  requestWakeLock().catch(() => {});
   const gameMode = normalizeGameMode(mode);
   const modeDetail = getModeDetail(gameMode);
   enterFullscreenMode();
@@ -1375,6 +1440,7 @@ function endRound() {
     cancelAnimationFrame(rafId);
     rafId = null;
   }
+  releaseWakeLock();
 
   if (state.isWon) vibrate([60, 40, 100]);
 
@@ -1416,6 +1482,7 @@ function quitRoundToHome() {
     clearTimeout(missedRevealTimer);
     missedRevealTimer = null;
   }
+  releaseWakeLock();
   if (pointerGrabId != null) {
     try { els.marshStage.releasePointerCapture?.(pointerGrabId); } catch { /* ignore */ }
     pointerGrabId = null;
@@ -1488,6 +1555,7 @@ function init() {
   attachStageListeners();
   attachTutorialDemoListeners();
   setSelectedMode(selectedMode);
+  initDaylightMode();
   lastHud = { remainingSeconds: GAME_MODE_LENGTH_SECONDS[selectedMode], foundCount: 0, misses: 0 };
   renderInstallPrompt();
 
@@ -1539,8 +1607,10 @@ function init() {
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) {
       pauseMarshAmbience();
+      releaseWakeLock();
     } else if (activeScreen === 'game' && state && !state.isOver) {
       playMarshAmbience();
+      requestWakeLock().catch(() => {});
     }
   });
 
