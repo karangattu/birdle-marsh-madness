@@ -789,6 +789,10 @@ body {
 
 .tutorial-guide[hidden] { display: none; }
 
+.tutorial-guide { pointer-events: none; }
+
+.tutorial-guide-replay { pointer-events: auto; }
+
 .tutorial-guide-text {
   color: var(--text);
   font-size: 0.8rem;
@@ -972,6 +976,86 @@ body {
 }
 
 .countdown-overlay[hidden] { display: none; }
+
+/* Field guide overlay */
+.field-guide-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(14px, 4vmin, 40px);
+  background:
+    radial-gradient(circle at top, rgba(var(--accent-rgb), 0.14) 0%, transparent 48%),
+    var(--overlay-bg-grad);
+  backdrop-filter: blur(14px);
+  animation: field-guide-fade 220ms ease-out both;
+}
+
+.field-guide-overlay[hidden] { display: none; }
+
+@keyframes field-guide-fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.field-guide-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: min(100%, 720px);
+  max-height: 92vh;
+  border-radius: 24px;
+  border: 1px solid var(--card-border);
+  background: var(--card-bg);
+  box-shadow: var(--card-shadow-heavy);
+  overflow: hidden;
+  animation: orientation-card-rise 320ms ease-out both;
+}
+
+.field-guide-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px clamp(16px, 3vmin, 24px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.field-guide-head h2 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: var(--text);
+}
+
+.field-guide-close { flex: none; }
+
+.field-guide-scroll {
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: clamp(12px, 3vmin, 20px);
+  display: grid;
+  place-items: center;
+}
+
+.field-guide-image {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #0a1f1b;
+}
+
+.field-guide-foot {
+  margin: 0;
+  padding: 10px clamp(16px, 3vmin, 24px) 16px;
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  text-align: center;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
 
 .countdown-number {
   font-size: clamp(80px, 25vmin, 160px);

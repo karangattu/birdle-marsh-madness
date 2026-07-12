@@ -121,6 +121,9 @@ const els = {
   quitButton: $('quitButton'),
   restartButton: $('restartButton'),
   howToButton: $('howToButton'),
+  fieldGuideButton: $('fieldGuideButton'),
+  fieldGuideOverlay: $('fieldGuideOverlay'),
+  fieldGuideClose: $('fieldGuideClose'),
   resultTitle: $('resultTitle'),
   resultStats: $('resultStats'),
   resultBest: $('resultBest'),
@@ -261,6 +264,8 @@ function setSelectedMode(mode) {
 // ---------------- Game state ----------------
 let state = null;
 let rafId = null;
+let fieldGuideOpen = false;
+let fieldGuidePausedAt = 0;
 let scopePos = { x: 0.5, y: 0.45 };           // fractions of stage
 let stageRect = null;
 let isDragging = false;
@@ -1178,6 +1183,8 @@ function endTutorialPinch() {
 
 function onTutorialPointerDown(e) {
   e.stopPropagation();
+  // Let interactive children (e.g. the Replay guide button) handle their own clicks.
+  if (e.target.closest && e.target.closest('button')) return;
   if (tutorialGuidePlaying) return;
   tutorialActivePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
   if (tutorialActivePointers.size >= 2) {
@@ -1745,6 +1752,10 @@ function runCountdown(onDone) {
 
 function loop() {
   if (!state) return;
+  if (fieldGuideOpen) {
+    rafId = requestAnimationFrame(loop);
+    return;
+  }
   tickGame(state, performance.now());
   refreshHud();
   if (state.isOver) {
@@ -1790,6 +1801,28 @@ function revealMissedBirds(missedIds) {
     }
   }
   flashFeedback('Birds you missed are marked in the marsh', 'bad');
+}
+
+function openFieldGuide() {
+  if (!els.fieldGuideOverlay) return;
+  fieldGuideOpen = true;
+  fieldGuidePausedAt = performance.now();
+  els.fieldGuideOverlay.hidden = false;
+  els.fieldGuideOverlay.classList.add('is-open');
+  els.fieldGuideOverlay.setAttribute('aria-hidden', 'false');
+}
+
+function closeFieldGuide() {
+  if (!fieldGuideOpen) return;
+  const pausedMs = performance.now() - fieldGuidePausedAt;
+  if (state && !state.isOver) {
+    // Shift the round start forward so the timer effectively paused.
+    state.startedAt += pausedMs;
+  }
+  fieldGuideOpen = false;
+  els.fieldGuideOverlay.hidden = true;
+  els.fieldGuideOverlay.classList.remove('is-open');
+  els.fieldGuideOverlay.setAttribute('aria-hidden', 'true');
 }
 
 function quitRoundToHome() {
@@ -1910,6 +1943,14 @@ function init() {
   els.howToButton.addEventListener('click', () => {
     returnToScreenAfterTutorial = 'game';
     showScreen('tutorial');
+  });
+  els.fieldGuideButton.addEventListener('click', openFieldGuide);
+  els.fieldGuideClose.addEventListener('click', closeFieldGuide);
+  els.fieldGuideOverlay.addEventListener('click', (e) => {
+    if (e.target === els.fieldGuideOverlay) closeFieldGuide();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && fieldGuideOpen) closeFieldGuide();
   });
   els.quitButton.addEventListener('click', quitRoundToHome);
   els.restartButton.addEventListener('click', () => beginGameSequence());

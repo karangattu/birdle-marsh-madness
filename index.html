@@ -160,6 +160,10 @@
             <svg class="icon moon-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
             <span>Daylight</span>
           </button>
+          <button id="fieldGuideButton" class="ghost-action game-field-guide-button" type="button" aria-label="Open the bird field guide">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v14H6a2 2 0 0 0-2 2z"/><path d="M15 3h3a2 2 0 0 1 2 2v15a2 2 0 0 0-2 2h-3z"/></svg>
+            Field guide
+          </button>
           <button id="quitButton" class="ghost-action game-quit-button" type="button" aria-label="Quit round and return home">
             <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
             Quit
@@ -258,6 +262,23 @@
         </div>
       </section>
     </main>
+
+    <!-- Field guide overlay -->
+    <div class="field-guide-overlay" id="fieldGuideOverlay" role="dialog" aria-modal="true" aria-label="Bird field guide" hidden>
+      <div class="field-guide-card">
+        <header class="field-guide-head">
+          <h2>Field guide</h2>
+          <button id="fieldGuideClose" class="ghost-action field-guide-close" type="button" aria-label="Close field guide">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
+            Close
+          </button>
+        </header>
+        <div class="field-guide-scroll">
+          <img class="field-guide-image" src="assets/reference_sheet.png" alt="Reference sheet of all twelve birds in the marsh with their names" />
+        </div>
+        <p class="field-guide-foot">The round timer pauses while the guide is open.</p>
+      </div>
+    </div>
 
     <div class="global-orientation-lock" id="globalOrientationLock" role="status" aria-live="polite" aria-label="Landscape required">
       <div class="orientation-guard-card">
