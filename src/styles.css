@@ -1144,12 +1144,38 @@ body {
 .analog-timer strong {
   position: absolute;
   inset: 0;
-  display: grid;
-  place-items: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   color: var(--text);
   font-size: clamp(0.9rem, 2.1vmin, 1.2rem);
   font-variant-numeric: tabular-nums;
   text-shadow: 0 2px 5px rgba(0, 0, 0, 0.55);
+}
+
+/* Odometer (rolling-digit) countdown */
+.odometer-digit {
+  display: block;
+  height: 1em;
+  line-height: 1;
+  overflow: hidden;
+  width: 0.62em;
+}
+.odometer-reel {
+  display: flex;
+  flex-direction: column;
+  transition: transform 420ms cubic-bezier(0.22, 0.61, 0.36, 1);
+  will-change: transform;
+}
+.odometer-reel > span {
+  height: 1em;
+  line-height: 1;
+  display: block;
+  text-align: center;
+}
+.analog-timer.is-warn strong { color: var(--bad); }
+@media (prefers-reduced-motion: reduce) {
+  .odometer-reel { transition: none; }
 }
 
 .analog-timer.is-warn {

@@ -1249,6 +1249,38 @@ function parsePx(value) {
 }
 
 // ---------------- HUD ----------------
+function buildOdometerReel() {
+  const reel = document.createElement('span');
+  reel.className = 'odometer-reel';
+  for (let d = 0; d <= 9; d++) {
+    const span = document.createElement('span');
+    span.textContent = String(d);
+    reel.appendChild(span);
+  }
+  return reel;
+}
+
+// Renders `value` as a rolling-digit odometer inside `el`.
+function setOdometer(el, value) {
+  const str = String(Math.max(0, Math.round(value))).padStart(2, '0');
+  if (!el._odometerReels || el._odometerReels.length !== str.length) {
+    el.textContent = '';
+    el._odometerReels = [];
+    for (let i = 0; i < str.length; i++) {
+      const digit = document.createElement('span');
+      digit.className = 'odometer-digit';
+      const reel = buildOdometerReel();
+      digit.appendChild(reel);
+      el.appendChild(digit);
+      el._odometerReels.push(reel);
+    }
+  }
+  for (let i = 0; i < str.length; i++) {
+    const d = Number(str[i]);
+    el._odometerReels[i].style.transform = `translateY(${-d}em)`;
+  }
+}
+
 function refreshHud() {
   const previousRemaining = lastHud.remainingSeconds;
   const previousFound = lastHud.foundCount;
@@ -1257,7 +1289,7 @@ function refreshHud() {
   const nextMisses = state.misses;
   const roundLengthSeconds = state.roundLengthSeconds ?? GAME_LENGTH_SECONDS;
 
-  els.timeRemaining.textContent = String(state.remainingSeconds);
+  setOdometer(els.timeRemaining, state.remainingSeconds);
   const elapsedSeconds = roundLengthSeconds - state.remainingSeconds;
   const progress = state.remainingSeconds / roundLengthSeconds;
   els.analogTimer.style.setProperty('--timer-progress', progress.toFixed(3));
