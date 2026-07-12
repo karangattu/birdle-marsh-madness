@@ -38,6 +38,9 @@ const SUPABASE_URL = 'https://ovwktjjeoowlktdfbuuu.supabase.co';
 const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_B2pz5WTA3UEVUeKACIgmBw_8_r0S3kU';
 const LEADERBOARD_TABLE = 'marsh_madness_leaderboard';
 const DEFAULT_ZOOM = 4.2;
+const MIN_ZOOM = DEFAULT_ZOOM;          // base mag: enough to identify a bird
+const MAX_ZOOM = MIN_ZOOM + 5;          // +5x extra zoom available on demand
+const ZOOM_STEP = 0.6;                  // per wheel notch
 const LEADERBOARD_LIMIT = 5;
 const PLAYER_LABEL_MAX_LENGTH = 40;
 const MISSED_BIRD_REVEAL_MS = 4000;
@@ -94,6 +97,7 @@ const els = {
   distantBirds: $('distantBirds'),
   magnifiedBirds: $('magnifiedBirds'),
   eyepiece: $('eyepiece'),
+  zoomIndicator: $('zoomIndicator'),
   scopeHint: $('scopeHint'),
   feedback: $('feedback'),
   analogTimer: $('analogTimer'),
@@ -252,7 +256,11 @@ let hasMoved = false;
 let focusedBirdId = null;
 let feedbackTimer = null;
 let pointerGrabId = null;
-let currentZoom = DEFAULT_ZOOM;
+let activePointers = new Map();         // pointerId -> {x, y} for pinch detection
+let isPinching = false;
+let pinchStartDist = 0;
+let pinchStartZoom = MIN_ZOOM;
+let currentZoom = MIN_ZOOM;
 let tutorialScopePos = { x: 0.24, y: 0.58 };
 let tutorialStep = 0;
 let tutorialPointerId = null;
@@ -937,6 +945,11 @@ function clamp(v, min, max) { return Math.min(max, Math.max(min, v)); }
 
 function onPointerDown(e) {
   if (!state || state.isOver) return;
+  activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if (activePointers.size >= 2) {
+    startPinch();
+    return;
+  }
   pointerGrabId = e.pointerId;
   els.marshStage.setPointerCapture?.(e.pointerId);
   isDragging = true;
@@ -947,10 +960,22 @@ function onPointerDown(e) {
   setScopeFromClient(e.clientX, e.clientY);
 }
 function onPointerMove(e) {
+  if (activePointers.has(e.pointerId)) {
+    activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  }
+  if (isPinching) {
+    updatePinch();
+    return;
+  }
   if (!isDragging || e.pointerId !== pointerGrabId) return;
   setScopeFromClient(e.clientX, e.clientY);
 }
 function onPointerUp(e) {
+  activePointers.delete(e.pointerId);
+  if (isPinching) {
+    if (activePointers.size < 2) endPinch();
+    return;
+  }
   if (e.pointerId !== pointerGrabId) return;
   isDragging = false;
   els.marshStage.classList.remove('is-dragging');
@@ -958,11 +983,49 @@ function onPointerUp(e) {
   pointerGrabId = null;
 }
 
+// ---------------- Pinch-to-zoom ----------------
+function startPinch() {
+  if (isDragging) {
+    isDragging = false;
+    els.marshStage.classList.remove('is-dragging');
+    if (pointerGrabId != null) {
+      try { els.marshStage.releasePointerCapture?.(pointerGrabId); } catch { /* ignore */ }
+    }
+    pointerGrabId = null;
+  }
+  isPinching = true;
+  els.marshStage.classList.add('is-pinching');
+  const pts = [...activePointers.values()];
+  pinchStartDist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y) || 1;
+  pinchStartZoom = currentZoom;
+}
+function updatePinch() {
+  const pts = [...activePointers.values()];
+  if (pts.length < 2) return;
+  const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y) || 1;
+  const ratio = dist / pinchStartDist;
+  setZoom(clampZoom(pinchStartZoom * ratio));
+}
+function endPinch() {
+  isPinching = false;
+  els.marshStage.classList.remove('is-pinching');
+  pinchStartDist = 0;
+}
+
+// ---------------- Wheel-to-zoom ----------------
+function onWheel(e) {
+  if (!state || state.isOver) return;
+  e.preventDefault();
+  const dir = -Math.sign(e.deltaY);
+  setZoom(clampZoom(currentZoom + dir * ZOOM_STEP));
+}
+
 function attachStageListeners() {
   els.marshStage.addEventListener('pointerdown', onPointerDown);
   els.marshStage.addEventListener('pointermove', onPointerMove);
   els.marshStage.addEventListener('pointerup', onPointerUp);
   els.marshStage.addEventListener('pointercancel', onPointerUp);
+  els.marshStage.addEventListener('wheel', onWheel, { passive: false });
 }
 
 // ---------------- Tutorial demo ----------------
@@ -1106,9 +1169,19 @@ function attachTutorialDemoListeners() {
 }
 
 // ---------------- Scope zoom and ambience ----------------
+function clampZoom(zoom) {
+  return clamp(zoom, MIN_ZOOM, MAX_ZOOM);
+}
+
 function setZoom(zoom) {
-  currentZoom = zoom;
-  els.marshStage.style.setProperty('--magnify', String(zoom));
+  currentZoom = clampZoom(zoom);
+  els.marshStage.style.setProperty('--magnify', String(currentZoom));
+  // Drive the optical vignette: 0 at base mag, 1 at max mag.
+  const zoomNorm = (currentZoom - MIN_ZOOM) / (MAX_ZOOM - MIN_ZOOM);
+  els.marshStage.style.setProperty('--zoom-norm', zoomNorm.toFixed(3));
+  if (els.zoomIndicator) {
+    els.zoomIndicator.textContent = `${currentZoom.toFixed(1)}×`;
+  }
   updateFocus();
 }
 
@@ -1390,7 +1463,7 @@ function startRound(mode = selectedMode) {
   applyScopeStyle();
   renderBirdLayers();
   renderBirdButtons();
-  setZoom(currentZoom);
+  setZoom(MIN_ZOOM);
   lastHud = { remainingSeconds: state.roundLengthSeconds, foundCount: 0, misses: 0 };
   refreshHud();
 

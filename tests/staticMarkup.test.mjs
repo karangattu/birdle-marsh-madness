@@ -37,10 +37,16 @@ test('game catalog exposes 12 bird buttons including Cinnamon Teal', () => {
   assert.match(birdCatalog, /cinnamon_teal/);
 });
 
-test('game uses a fixed 4.2x zoom and looping marsh ambience', () => {
+test('game uses adjustable magnification: base 4.2x with up to +5x via scroll and pinch', () => {
   assert.doesNotMatch(html, /id="zoomControls"/);
   assert.match(appSource, /const DEFAULT_ZOOM = 4\.2;/);
-  assert.match(appSource, /let currentZoom = DEFAULT_ZOOM;/);
+  assert.match(appSource, /const MIN_ZOOM = DEFAULT_ZOOM;/);
+  assert.match(appSource, /const MAX_ZOOM = MIN_ZOOM \+ 5;/);
+  assert.match(appSource, /function clampZoom\(/);
+  assert.match(appSource, /function setZoom\(/);
+  assert.match(appSource, /function onWheel\(/);
+  assert.match(appSource, /function startPinch\(/);
+  assert.match(html, /id="zoomIndicator"/);
   assert.match(html, /id="gameAudio"/);
   assert.match(html, /src="assets\/marsh_sounds\.mp3"/);
   assert.match(html, /loop/);

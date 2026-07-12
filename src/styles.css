@@ -13,6 +13,7 @@
   --panel-strong: rgba(8, 24, 20, 0.92);
   --eyepiece-radius: clamp(86px, 13vmin, 150px);
   --magnify: 4.2;
+  --zoom-norm: 0;            /* 0 at base mag, 1 at max mag (drives vignette) */
   --bird-size: clamp(22px, 3vmin, 44px);
   --scope-x: 50%;
   --scope-y: 45%;
@@ -1347,6 +1348,7 @@ body {
     0 0 0 17px rgba(80, 69, 50, 0.9),
     0 0 0 20px var(--eyepiece-highlight-ring),
     0 0 90px 34px rgba(0, 0, 0, 0.58) inset,
+    0 0 calc(20px + 90px * var(--zoom-norm, 0)) calc(8px + 34px * var(--zoom-norm, 0)) rgba(0, 0, 0, calc(0.18 + 0.46 * var(--zoom-norm, 0))) inset,
     0 30px 60px rgba(0, 0, 0, 0.6);
   transition: box-shadow 220ms ease;
   z-index: 5;
@@ -1409,6 +1411,29 @@ body {
   opacity: 0.95;
   z-index: 4;
   user-select: none;
+}
+
+.zoom-indicator {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 6;
+  padding: 5px 11px;
+  font: 600 14px/1 ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  letter-spacing: 0.04em;
+  color: var(--text);
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(246, 196, 83, 0.35);
+  border-radius: 999px;
+  pointer-events: none;
+  user-select: none;
+  backdrop-filter: blur(2px);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+  transition: border-color 180ms ease;
+}
+
+.zoom-indicator:not(:empty) {
+  border-color: rgba(246, 196, 83, calc(0.35 + 0.5 * var(--zoom-norm, 0)));
 }
 
 .scope-hint {
