@@ -640,6 +640,7 @@ body {
     0 0 0 17px rgba(80, 69, 50, 0.9),
     0 0 0 20px var(--eyepiece-highlight-ring),
     0 0 90px 34px rgba(0, 0, 0, 0.58) inset,
+    0 0 calc(20px + 90px * var(--tutorial-zoom-norm, 0)) calc(8px + 34px * var(--tutorial-zoom-norm, 0)) rgba(0, 0, 0, calc(0.18 + 0.46 * var(--tutorial-zoom-norm, 0))) inset,
     0 30px 60px rgba(0, 0, 0, 0.6);
   pointer-events: auto;
   cursor: grab;
@@ -724,6 +725,96 @@ body {
 
 .tutorial-demo.is-dragging .tutorial-step-hint,
 .tutorial-step-hint.is-hidden { opacity: 0; }
+
+/* Tutorial zoom indicator (mirrors the in-game zoom indicator) */
+.tutorial-zoom-indicator {
+  top: 10px;
+  left: 10px;
+  right: auto;
+  font-size: 13px;
+  padding: 4px 10px;
+  z-index: 7;
+}
+
+.tutorial-zoom-indicator:not(:empty) {
+  border-color: rgba(246, 196, 83, calc(0.35 + 0.5 * var(--tutorial-zoom-norm, 0)));
+}
+
+/* Guided tour pointer that follows the scope during the auto demo */
+.tutorial-guide-pointer {
+  position: absolute;
+  left: var(--tutorial-scope-x);
+  top: var(--tutorial-scope-y);
+  width: 34px;
+  height: 34px;
+  transform: translate(-50%, -50%);
+  border-radius: 999px;
+  border: 2px solid var(--accent);
+  background: radial-gradient(circle, rgba(246, 196, 83, 0.35), transparent 70%);
+  box-shadow: 0 0 0 6px rgba(246, 196, 83, 0.18);
+  pointer-events: none;
+  z-index: 8;
+  opacity: 0;
+  transition: opacity 220ms ease;
+}
+
+.tutorial-demo.is-guided .tutorial-guide-pointer {
+  opacity: 1;
+  animation: tutorial-guide-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes tutorial-guide-pulse {
+  0%, 100% { box-shadow: 0 0 0 6px rgba(246, 196, 83, 0.18); }
+  50% { box-shadow: 0 0 0 12px rgba(246, 196, 83, 0.05); }
+}
+
+/* Guided-tour coach message + replay control */
+.tutorial-guide {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: calc(100% - 24px);
+  padding: 6px 8px 6px 16px;
+  border-radius: 999px;
+  background: rgba(8, 24, 20, 0.86);
+  border: 1px solid rgba(246, 196, 83, 0.42);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(3px);
+}
+
+.tutorial-guide[hidden] { display: none; }
+
+.tutorial-guide-text {
+  color: var(--text);
+  font-size: 0.8rem;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tutorial-guide-replay {
+  flex: none;
+  margin-left: auto;
+  padding: 5px 14px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: #1a1306;
+  background: var(--demo-btn-highlight-bg);
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: transform 160ms ease, filter 160ms ease;
+}
+
+.tutorial-guide-replay:hover { filter: brightness(1.06); transform: translateY(-1px); }
+.tutorial-guide-replay:active { transform: translateY(0); }
 
 .tutorial-demo-buttons {
   display: grid;

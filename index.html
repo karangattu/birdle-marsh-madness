@@ -102,7 +102,13 @@
             </div>
             <div class="tutorial-demo-scope" id="tutorialDemoScope"><div class="eyepiece-glare"></div></div>
             <img class="tutorial-demo-tool" src="assets/looking_through_scope.png" alt="" />
+            <div class="tutorial-guide-pointer" id="tutorialGuidePointer" aria-hidden="true"></div>
+            <div class="zoom-indicator tutorial-zoom-indicator" id="tutorialZoomIndicator" aria-hidden="true">3.5×</div>
             <div class="tutorial-step-hint" id="tutorialStepHint">Drag anywhere on the marsh to look around</div>
+            <div class="tutorial-guide" id="tutorialGuide" hidden>
+              <span class="tutorial-guide-text" id="tutorialGuideText"></span>
+              <button class="tutorial-guide-replay" id="tutorialGuideReplay" type="button">Replay guide</button>
+            </div>
           </div>
           <div class="tutorial-demo-buttons" hidden>
             <button class="bird-button demo-button" id="demoMallardButton" type="button">Mallard</button>
@@ -114,6 +120,7 @@
               <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5a2 2 0 0 1 3-1.73l11 7a2 2 0 0 1 0 3.46l-11 7A2 2 0 0 1 5 19z" /></svg>
               Start round
             </button>
+            <button id="tutorialWatch" class="ghost-action" type="button">Watch guide</button>
             <button id="tutorialSkip" class="ghost-action" type="button">Skip tutorial</button>
             <button id="tutorialBack" class="ghost-action" type="button">Back</button>
           </div>
