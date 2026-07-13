@@ -40,6 +40,10 @@
               <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" /><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" /><path d="M12 17h.01" /></svg>
               How to play
             </button>
+            <button id="splashFieldGuide" class="ghost-action" type="button" aria-label="Open the bird field guide">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v14H6a2 2 0 0 1-2 2z"/><path d="M15 3h3a2 2 0 0 1 2 2v15a2 2 0 0 1-2 2h-3z"/></svg>
+              Field guide
+            </button>
             <button id="splashDaylightToggle" class="ghost-action daylight-toggle" type="button" aria-label="Toggle daylight mode">
               <svg class="icon sun-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
               <svg class="icon moon-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
@@ -160,10 +164,6 @@
             <svg class="icon moon-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
             <span>Daylight</span>
           </button>
-          <button id="fieldGuideButton" class="ghost-action game-field-guide-button" type="button" aria-label="Open the bird field guide">
-            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v14H6a2 2 0 0 0-2 2z"/><path d="M15 3h3a2 2 0 0 1 2 2v15a2 2 0 0 0-2 2h-3z"/></svg>
-            Field guide
-          </button>
           <button id="quitButton" class="ghost-action game-quit-button" type="button" aria-label="Quit round and return home">
             <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
             Quit
@@ -276,7 +276,7 @@
         <div class="field-guide-scroll">
           <img class="field-guide-image" src="assets/reference_sheet.png" alt="Reference sheet of all twelve birds in the marsh with their names" />
         </div>
-        <p class="field-guide-foot">The round timer pauses while the guide is open.</p>
+        <p class="field-guide-foot">Review the birds here before starting your round.</p>
       </div>
     </div>
 

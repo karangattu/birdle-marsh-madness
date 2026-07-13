@@ -52,6 +52,16 @@ test('game uses adjustable magnification: base 4.2x with up to +5x via scroll an
   assert.match(html, /loop/);
 });
 
+test('scope realism: breathing sway magnifies the tremble and the reticle tightens with aim', () => {
+  assert.match(styles, /@keyframes scope-sway/);
+  assert.match(appSource, /--sway-amp/);
+  assert.match(html, /class="eyepiece-reticle"/);
+  assert.match(styles, /\.eyepiece-reticle/);
+  assert.match(appSource, /--focus-precision/);
+  assert.match(appSource, /--reticle-x/);
+  assert.match(appSource, /--reticle-y/);
+});
+
 test('tutorial screen includes looping background audio', () => {
   assert.match(html, /id="tutorialAudio"/);
   assert.match(html, /src="assets\/tutorial_sound\.mp3"/);
@@ -94,6 +104,14 @@ test('opening screen shows regular and expert mode buttons', () => {
   assert.match(html, /id="modeExpert"/);
   assert.match(appSource, /leaderboardMode: 'regular'/);
   assert.match(appSource, /leaderboardMode: 'expert'/);
+});
+
+test('field guide is available before the round, not during active play', () => {
+  assert.match(html, /id="splashFieldGuide"/);
+  assert.doesNotMatch(html, /id="fieldGuideButton"/);
+  assert.match(html, /Review the birds here before starting your round\./);
+  assert.match(appSource, /splashFieldGuide\.addEventListener\('click', openFieldGuide\)/);
+  assert.doesNotMatch(appSource, /fieldGuidePausedAt/);
 });
 
 test('splash includes a dismissible install prompt for non-PWA play', () => {
@@ -247,4 +265,3 @@ test('daylight mode toggles and screen wake lock exist in markup and logic', () 
   assert.match(appSource, /async function requestWakeLock\(\)/);
   assert.match(appSource, /function releaseWakeLock\(\)/);
 });
-
