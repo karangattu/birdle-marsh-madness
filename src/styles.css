@@ -1623,7 +1623,7 @@ body {
   font: 600 14px/1 ui-monospace, "SF Mono", Menlo, Consolas, monospace;
   letter-spacing: 0.04em;
   color: var(--text);
-  background: rgba(0, 0, 0, 0.5);
+  background: var(--hint-bg);
   border: 1px solid rgba(246, 196, 83, 0.35);
   border-radius: 999px;
   pointer-events: none;
@@ -1642,7 +1642,7 @@ body {
   bottom: 14px;
   left: 50%;
   transform: translateX(-50%);
-  background: rgba(0, 0, 0, 0.55);
+  background: var(--hint-bg);
   color: var(--text);
   padding: 8px 14px;
   border-radius: 999px;
@@ -2308,6 +2308,27 @@ body.daylight-mode .screen-splash {
   background: var(--bg-soft);
 }
 
+body.daylight-mode .splash-bottom-bar {
+  --mode-selector-bg: rgba(6, 19, 17, 0.82);
+  --mode-selector-border: rgba(255, 255, 255, 0.22);
+  --mode-btn-hover: rgba(255, 255, 255, 0.1);
+}
+
+body.daylight-mode .splash-bottom-bar .mode-button:not(.is-selected),
+body.daylight-mode .splash-bottom-bar .ghost-action {
+  color: #f5f3e8;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
+}
+
+body.daylight-mode .splash-bottom-bar .ghost-action {
+  background: rgba(6, 19, 17, 0.82);
+  border-color: rgba(255, 255, 255, 0.24);
+}
+
+body.daylight-mode .splash-bottom-bar .ghost-action:hover {
+  background: rgba(6, 19, 17, 0.94);
+}
+
 body.daylight-mode .screen-tutorial,
 body.daylight-mode .screen-game,
 body.daylight-mode .screen-result {
@@ -2364,4 +2385,3 @@ body.daylight-mode .daylight-toggle .sun-icon {
 body.daylight-mode .daylight-toggle .moon-icon {
   display: inline-block;
 }
-
