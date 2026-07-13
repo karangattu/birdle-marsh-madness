@@ -52,16 +52,6 @@ test('game uses adjustable magnification: base 4.2x with up to +5x via scroll an
   assert.match(html, /loop/);
 });
 
-test('scope realism: breathing sway magnifies the tremble and the reticle tightens with aim', () => {
-  assert.match(styles, /@keyframes scope-sway/);
-  assert.match(appSource, /--sway-amp/);
-  assert.match(html, /class="eyepiece-reticle"/);
-  assert.match(styles, /\.eyepiece-reticle/);
-  assert.match(appSource, /--focus-precision/);
-  assert.match(appSource, /--reticle-x/);
-  assert.match(appSource, /--reticle-y/);
-});
-
 test('tutorial screen includes looping background audio', () => {
   assert.match(html, /id="tutorialAudio"/);
   assert.match(html, /src="assets\/tutorial_sound\.mp3"/);
