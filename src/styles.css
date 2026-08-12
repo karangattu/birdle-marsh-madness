@@ -1,3 +1,11 @@
+@font-face {
+  font-family: 'Mona Sans';
+  src: url('../assets/fonts/mona-sans.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 200 900;
+  font-display: swap;
+}
+
 :root {
   --bg-deep: #0b1f1a;
   --bg-soft: #163a32;
@@ -103,7 +111,8 @@ html, body {
   height: 100%;
   background: radial-gradient(ellipse at top, #1a3a32 0%, #061311 100%);
   color: var(--text);
-  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-family: 'Mona Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-optical-sizing: auto;
   -webkit-font-smoothing: antialiased;
   overflow: hidden;
 }
@@ -2220,23 +2229,24 @@ body {
   .bird-buttons { grid-template-columns: repeat(2, 1fr); }
 }
 
-/* ============== DAYLIGHT MODE (LIGHT/HIGH-CONTRAST THEME) ============== */
-body.daylight-mode {
-  background: radial-gradient(ellipse at top, #ffffff 0%, #f0ede0 100%);
-  --bg-deep: #fbfbfa;
-  --bg-soft: #f0ede0;
-  --accent: #b86b00; /* Warm honey-amber, beautiful and legible */
-  --accent-rgb: 184, 107, 0;
-  --accent-strong: #915100; /* Darker honey-amber */
-  --accent-strong-rgb: 145, 81, 0;
-  --good: #1a732d;
-  --good-rgb: 26, 115, 45;
-  --bad: #b52222;
-  --bad-rgb: 181, 34, 34;
-  --text: #081a16; /* Deep forest green */
-  --text-dim: #425a54; /* Muted forest green */
-  --panel: rgba(255, 255, 255, 0.85);
-  --panel-strong: rgba(255, 255, 255, 0.96);
+/* ============== OUTDOOR MODE (BRIGHT/HIGH-CONTRAST THEME) ============== */
+body.outdoor-mode {
+  color-scheme: light;
+  background: radial-gradient(ellipse at top, #ffffff 0%, #f2efe4 100%);
+  --bg-deep: #fffef8;
+  --bg-soft: #f2efe4;
+  --accent: #965600;
+  --accent-rgb: 150, 86, 0;
+  --accent-strong: #754000;
+  --accent-strong-rgb: 117, 64, 0;
+  --good: #145f27;
+  --good-rgb: 20, 95, 39;
+  --bad: #a61919;
+  --bad-rgb: 166, 25, 25;
+  --text: #061713;
+  --text-dim: #324943;
+  --panel: rgba(255, 255, 255, 0.94);
+  --panel-strong: #ffffff;
 
   /* --- BRAND & UI TOKENS --- */
   --btn-primary-text: #ffffff; /* Crisp white text on warm dark amber buttons */
@@ -2250,8 +2260,8 @@ body.daylight-mode {
   --form-border: rgba(184, 107, 0, 0.22);
   --form-shadow: none;
   
-  --focus-border: #b86b00;
-  --focus-ring: rgba(184, 107, 0, 0.18);
+  --focus-border: #754000;
+  --focus-ring: rgba(117, 64, 0, 0.2);
   
   --support-bg: rgba(0, 0, 0, 0.02);
   --support-border: rgba(0, 0, 0, 0.05);
@@ -2315,52 +2325,58 @@ body.daylight-mode {
   --tutorial-step-active-bg: rgba(184, 107, 0, 0.06);
 }
 
-body.daylight-mode .screen-splash {
+body.outdoor-mode .screen-splash {
   background: var(--bg-soft);
 }
 
-body.daylight-mode .splash-bottom-bar {
+body.outdoor-mode .splash-bottom-bar {
   --mode-selector-bg: rgba(6, 19, 17, 0.82);
   --mode-selector-border: rgba(255, 255, 255, 0.22);
   --mode-btn-hover: rgba(255, 255, 255, 0.1);
 }
 
-body.daylight-mode .splash-bottom-bar .mode-button:not(.is-selected),
-body.daylight-mode .splash-bottom-bar .ghost-action {
+body.outdoor-mode .splash-bottom-bar .mode-button:not(.is-selected),
+body.outdoor-mode .splash-bottom-bar .ghost-action {
   color: #f5f3e8;
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
 }
 
-body.daylight-mode .splash-bottom-bar .ghost-action {
+body.outdoor-mode .splash-bottom-bar .ghost-action {
   background: rgba(6, 19, 17, 0.82);
   border-color: rgba(255, 255, 255, 0.24);
 }
 
-body.daylight-mode .splash-bottom-bar .ghost-action:hover {
+body.outdoor-mode .splash-bottom-bar .ghost-action:hover {
   background: rgba(6, 19, 17, 0.94);
 }
 
-body.daylight-mode .screen-tutorial,
-body.daylight-mode .screen-game,
-body.daylight-mode .screen-result {
+body.outdoor-mode .mode-button.is-selected,
+body.outdoor-mode .mode-option.is-active {
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+}
+
+body.outdoor-mode .screen-tutorial,
+body.outdoor-mode .screen-game,
+body.outdoor-mode .screen-result {
   background: linear-gradient(180deg, var(--bg-deep) 0%, var(--bg-soft) 100%);
 }
 
-body.daylight-mode .countdown-overlay {
+body.outdoor-mode .countdown-overlay {
   background: rgba(255, 255, 255, 0.95);
 }
 
-body.daylight-mode .ghost-action {
+body.outdoor-mode .ghost-action {
   background: rgba(0, 0, 0, 0.03);
   color: var(--text);
   border: 1px solid rgba(0, 0, 0, 0.08);
 }
 
-body.daylight-mode .ghost-action:hover {
+body.outdoor-mode .ghost-action:hover {
   background: rgba(0, 0, 0, 0.06);
 }
 
-body.daylight-mode .bird-button {
+body.outdoor-mode .bird-button {
   background:
     linear-gradient(135deg, rgba(0, 0, 0, 0.02), rgba(0, 0, 0, 0.005)),
     rgba(255, 255, 255, 0.88);
@@ -2369,7 +2385,7 @@ body.daylight-mode .bird-button {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 8px 18px rgba(0, 0, 0, 0.06);
 }
 
-body.daylight-mode .bird-button:hover {
+body.outdoor-mode .bird-button:hover {
   background:
     linear-gradient(135deg, rgba(0, 0, 0, 0.04), rgba(0, 0, 0, 0.01)),
     rgba(255, 255, 255, 0.95);
@@ -2377,7 +2393,7 @@ body.daylight-mode .bird-button:hover {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 10px 24px rgba(0, 0, 0, 0.1);
 }
 
-body.daylight-mode .bird-button.is-found {
+body.outdoor-mode .bird-button.is-found {
   background:
     linear-gradient(135deg, rgba(27, 122, 45, 0.1), rgba(27, 122, 45, 0.03)),
     rgba(255, 255, 255, 0.95);
@@ -2386,13 +2402,36 @@ body.daylight-mode .bird-button.is-found {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 0 0 1px rgba(27, 122, 45, 0.06), 0 10px 24px rgba(0, 0, 0, 0.04);
 }
 
-/* Daylight toggle button icon switching */
-.daylight-toggle .moon-icon {
+body.outdoor-mode .marsh-backdrop,
+body.outdoor-mode .tutorial-demo-bg {
+  filter: brightness(1.1) contrast(1.08) saturate(1.08);
+}
+
+body.outdoor-mode .marsh-stage::after {
+  background:
+    radial-gradient(circle at var(--scope-x) var(--scope-y), transparent 0%, transparent 24%, rgba(0, 0, 0, 0.05) 58%, rgba(0, 0, 0, 0.14) 100%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.09), rgba(0, 0, 0, 0.02));
+  mix-blend-mode: normal;
+}
+
+body.outdoor-mode .distant-fog { opacity: 0.45; }
+
+body.outdoor-mode .distant .marsh-bird {
+  filter: brightness(1.02) contrast(1.12) saturate(1.02);
+  opacity: 1;
+}
+
+body.outdoor-mode .magnified-clip {
+  filter: brightness(1.08) saturate(1.2) contrast(1.12);
+}
+
+/* Environment toggle icon switching */
+.environment-toggle .indoor-icon {
   display: none;
 }
-body.daylight-mode .daylight-toggle .sun-icon {
+body.outdoor-mode .environment-toggle .outdoor-icon {
   display: none;
 }
-body.daylight-mode .daylight-toggle .moon-icon {
+body.outdoor-mode .environment-toggle .indoor-icon {
   display: inline-block;
 }

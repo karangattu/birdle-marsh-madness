@@ -247,11 +247,13 @@ test('start and restart paths call unlockAudioContext', () => {
   assert.match(appSource, /function startRound\([^)]*\) \{\s*unlockAudioContext\(\)/);
 });
 
-test('daylight mode toggles and screen wake lock exist in markup and logic', () => {
-  assert.match(html, /id="splashDaylightToggle"/);
-  assert.match(html, /id="gameDaylightToggle"/);
-  assert.match(styles, /body\.daylight-mode/);
-  assert.match(appSource, /function initDaylightMode\(\)/);
+test('indoor and outdoor modes toggle and preserve older daylight preferences', () => {
+  assert.match(html, /id="splashEnvironmentToggle"/);
+  assert.match(html, /id="gameEnvironmentToggle"/);
+  assert.match(html, />Outdoors<\/span>/);
+  assert.match(styles, /body\.outdoor-mode/);
+  assert.match(appSource, /function initViewingMode\(\)/);
+  assert.match(appSource, /LEGACY_DAYLIGHT_MODE_KEY/);
   assert.match(appSource, /async function requestWakeLock\(\)/);
   assert.match(appSource, /function releaseWakeLock\(\)/);
 });
@@ -265,8 +267,16 @@ test('game interaction polish supports keyboard play and safe completed buttons'
   assert.match(styles, /:where\(button, input, \.marsh-stage\):focus-visible/);
 });
 
-test('daylight controls announce their current action', () => {
-  assert.match(html, /id="splashDaylightToggle"[^>]*aria-pressed="false"/);
+test('environment controls announce their current action', () => {
+  assert.match(html, /id="splashEnvironmentToggle"[^>]*aria-pressed="false"/);
   assert.match(appSource, /toggle\.setAttribute\('aria-pressed', String\(enabled\)\)/);
-  assert.match(appSource, /Switch to dark mode/);
+  assert.match(appSource, /Switch to indoors mode/);
+  assert.match(appSource, /Switch to outdoors mode/);
+});
+
+test('Mona Sans is bundled and preloaded for offline play', () => {
+  assert.match(html, /rel="preload" href="assets\/fonts\/mona-sans\.woff2" as="font"/);
+  assert.match(styles, /font-family: 'Mona Sans'/);
+  assert.match(styles, /url\('\.\.\/assets\/fonts\/mona-sans\.woff2'\)/);
+  assert.match(serviceWorker, /assets\/fonts\/mona-sans\.woff2/);
 });

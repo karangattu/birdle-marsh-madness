@@ -11,6 +11,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="Marsh Madness" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <link rel="preload" href="assets/fonts/mona-sans.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="stylesheet" href="src/styles.css" />
   </head>
   <body>
@@ -44,10 +45,10 @@
               <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v14H6a2 2 0 0 1-2 2z"/><path d="M15 3h3a2 2 0 0 1 2 2v15a2 2 0 0 1-2 2h-3z"/></svg>
               Field guide
             </button>
-            <button id="splashDaylightToggle" class="ghost-action daylight-toggle" type="button" aria-label="Switch to daylight mode" aria-pressed="false" data-light-label="Daylight Mode" data-dark-label="Dark Mode">
-              <svg class="icon sun-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
-              <svg class="icon moon-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
-              <span class="daylight-label">Daylight Mode</span>
+            <button id="splashEnvironmentToggle" class="ghost-action environment-toggle" type="button" aria-label="Switch to outdoors mode" aria-pressed="false" data-outdoor-label="Outdoors" data-indoor-label="Indoors">
+              <svg class="icon outdoor-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+              <svg class="icon indoor-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m3 11 9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></svg>
+              <span class="environment-label">Outdoors</span>
             </button>
           </div>
 
@@ -159,10 +160,10 @@
               <span>Misses</span><strong id="misses">0</strong>
             </div>
           </div>
-          <button id="gameDaylightToggle" class="ghost-action game-daylight-toggle daylight-toggle" type="button" aria-label="Switch to daylight mode" aria-pressed="false" data-light-label="Daylight" data-dark-label="Dark">
-            <svg class="icon sun-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
-            <svg class="icon moon-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
-            <span class="daylight-label">Daylight</span>
+          <button id="gameEnvironmentToggle" class="ghost-action game-environment-toggle environment-toggle" type="button" aria-label="Switch to outdoors mode" aria-pressed="false" data-outdoor-label="Outdoors" data-indoor-label="Indoors">
+            <svg class="icon outdoor-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+            <svg class="icon indoor-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m3 11 9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></svg>
+            <span class="environment-label">Outdoors</span>
           </button>
           <button id="quitButton" class="ghost-action game-quit-button" type="button" aria-label="Quit round and return home">
             <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>

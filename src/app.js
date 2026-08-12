@@ -142,53 +142,53 @@ const els = {
   leaderboardNameStatus: $('leaderboardNameStatus'),
   resultRestart: $('resultRestart'),
   resultHome: $('resultHome'),
-  splashDaylightToggle: $('splashDaylightToggle'),
-  gameDaylightToggle: $('gameDaylightToggle'),
+  splashEnvironmentToggle: $('splashEnvironmentToggle'),
+  gameEnvironmentToggle: $('gameEnvironmentToggle'),
 };
 
-const DAYLIGHT_MODE_KEY = 'marsh-madness-daylight-mode';
+const VIEWING_MODE_KEY = 'marsh-madness-viewing-mode';
+const LEGACY_DAYLIGHT_MODE_KEY = 'marsh-madness-daylight-mode';
 let wakeLock = null;
 
-function applyDaylightMode(enabled) {
+function applyOutdoorMode(enabled) {
   if (enabled) {
-    document.body.classList.add('daylight-mode');
+    document.body.classList.add('outdoor-mode');
     const themeColorMeta = document.querySelector('meta[name="theme-color"]');
     if (themeColorMeta) {
-      themeColorMeta.setAttribute('content', '#f7f6f0');
+      themeColorMeta.setAttribute('content', '#fffef8');
     }
   } else {
-    document.body.classList.remove('daylight-mode');
+    document.body.classList.remove('outdoor-mode');
     const themeColorMeta = document.querySelector('meta[name="theme-color"]');
     if (themeColorMeta) {
       themeColorMeta.setAttribute('content', '#06211b');
     }
   }
-  for (const toggle of [els.splashDaylightToggle, els.gameDaylightToggle]) {
+  for (const toggle of [els.splashEnvironmentToggle, els.gameEnvironmentToggle]) {
     if (!toggle) continue;
     toggle.setAttribute('aria-pressed', String(enabled));
-    toggle.setAttribute('aria-label', enabled ? 'Switch to dark mode' : 'Switch to daylight mode');
-    const label = toggle.querySelector('.daylight-label');
-    if (label) label.textContent = enabled ? toggle.dataset.darkLabel : toggle.dataset.lightLabel;
+    toggle.setAttribute('aria-label', enabled ? 'Switch to indoors mode' : 'Switch to outdoors mode');
+    const label = toggle.querySelector('.environment-label');
+    if (label) label.textContent = enabled ? toggle.dataset.indoorLabel : toggle.dataset.outdoorLabel;
   }
   try {
-    localStorage.setItem(DAYLIGHT_MODE_KEY, String(enabled));
+    localStorage.setItem(VIEWING_MODE_KEY, enabled ? 'outdoor' : 'indoor');
   } catch { /* ignore */ }
 }
 
-function initDaylightMode() {
-  let isEnabled = false;
+function initViewingMode() {
+  let isOutdoor = false;
   try {
-    const saved = localStorage.getItem(DAYLIGHT_MODE_KEY);
-    isEnabled = saved === 'true';
+    const saved = localStorage.getItem(VIEWING_MODE_KEY);
+    isOutdoor = saved ? saved === 'outdoor' : localStorage.getItem(LEGACY_DAYLIGHT_MODE_KEY) === 'true';
   } catch { /* ignore */ }
-  applyDaylightMode(isEnabled);
+  applyOutdoorMode(isOutdoor);
 
-  const toggles = [els.splashDaylightToggle, els.gameDaylightToggle];
+  const toggles = [els.splashEnvironmentToggle, els.gameEnvironmentToggle];
   for (const toggle of toggles) {
     if (toggle) {
       toggle.addEventListener('click', () => {
-        const currentlyEnabled = document.body.classList.contains('daylight-mode');
-        applyDaylightMode(!currentlyEnabled);
+        applyOutdoorMode(!document.body.classList.contains('outdoor-mode'));
       });
     }
   }
@@ -1932,7 +1932,7 @@ function init() {
   attachStageListeners();
   attachTutorialDemoListeners();
   setSelectedMode(selectedMode);
-  initDaylightMode();
+  initViewingMode();
   lastHud = { remainingSeconds: GAME_MODE_LENGTH_SECONDS[selectedMode], foundCount: 0, misses: 0 };
   renderInstallPrompt();
 
