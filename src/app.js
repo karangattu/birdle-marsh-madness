@@ -163,6 +163,13 @@ function applyDaylightMode(enabled) {
       themeColorMeta.setAttribute('content', '#06211b');
     }
   }
+  for (const toggle of [els.splashDaylightToggle, els.gameDaylightToggle]) {
+    if (!toggle) continue;
+    toggle.setAttribute('aria-pressed', String(enabled));
+    toggle.setAttribute('aria-label', enabled ? 'Switch to dark mode' : 'Switch to daylight mode');
+    const label = toggle.querySelector('.daylight-label');
+    if (label) label.textContent = enabled ? toggle.dataset.darkLabel : toggle.dataset.lightLabel;
+  }
   try {
     localStorage.setItem(DAYLIGHT_MODE_KEY, String(enabled));
   } catch { /* ignore */ }
@@ -940,6 +947,8 @@ function markBirdFound(birdId) {
   if (btn) {
     btn.classList.add('is-found');
     btn.classList.add('is-just-found');
+    btn.disabled = true;
+    btn.setAttribute('aria-label', `${BIRDS.find((bird) => bird.id === birdId)?.name ?? 'Bird'} — spotted`);
     window.setTimeout(() => btn.classList.remove('is-just-found'), 520);
   }
   els.eyepiece.classList.add('is-confirmed');
@@ -970,6 +979,7 @@ function clamp(v, min, max) { return Math.min(max, Math.max(min, v)); }
 
 function onPointerDown(e) {
   if (!state || state.isOver) return;
+  els.marshStage.focus({ preventScroll: true });
   activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
   if (activePointers.size >= 2) {
     startPinch();
@@ -1045,12 +1055,38 @@ function onWheel(e) {
   setZoom(clampZoom(currentZoom + dir * ZOOM_STEP));
 }
 
+function onStageKeyDown(e) {
+  if (!state || state.isOver) return;
+  const directions = {
+    ArrowLeft: [-1, 0],
+    ArrowRight: [1, 0],
+    ArrowUp: [0, -1],
+    ArrowDown: [0, 1],
+  };
+  const direction = directions[e.key];
+  if (direction) {
+    e.preventDefault();
+    const step = e.shiftKey ? 0.06 : 0.025;
+    scopePos.x = clamp(scopePos.x + direction[0] * step, 0.04, 0.96);
+    scopePos.y = clamp(scopePos.y + direction[1] * step, 0.04, 0.96);
+    els.scopeHint.classList.add('is-hidden');
+    applyScopeStyle();
+    updateFocus();
+    return;
+  }
+  if (['+', '=', '-', '_'].includes(e.key)) {
+    e.preventDefault();
+    setZoom(currentZoom + (e.key === '+' || e.key === '=' ? ZOOM_STEP : -ZOOM_STEP));
+  }
+}
+
 function attachStageListeners() {
   els.marshStage.addEventListener('pointerdown', onPointerDown);
   els.marshStage.addEventListener('pointermove', onPointerMove);
   els.marshStage.addEventListener('pointerup', onPointerUp);
   els.marshStage.addEventListener('pointercancel', onPointerUp);
   els.marshStage.addEventListener('wheel', onWheel, { passive: false });
+  els.marshStage.addEventListener('keydown', onStageKeyDown);
 }
 
 // ---------------- Tutorial demo ----------------

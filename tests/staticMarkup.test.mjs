@@ -255,3 +255,18 @@ test('daylight mode toggles and screen wake lock exist in markup and logic', () 
   assert.match(appSource, /async function requestWakeLock\(\)/);
   assert.match(appSource, /function releaseWakeLock\(\)/);
 });
+
+test('game interaction polish supports keyboard play and safe completed buttons', () => {
+  assert.match(html, /id="marshStage"[^>]*role="region"[^>]*tabindex="0"/);
+  assert.match(html, /scroll, pinch, or \+\/− to zoom/);
+  assert.match(appSource, /function onStageKeyDown\(e\)/);
+  assert.match(appSource, /addEventListener\('keydown', onStageKeyDown\)/);
+  assert.match(appSource, /btn\.disabled = true/);
+  assert.match(styles, /:where\(button, input, \.marsh-stage\):focus-visible/);
+});
+
+test('daylight controls announce their current action', () => {
+  assert.match(html, /id="splashDaylightToggle"[^>]*aria-pressed="false"/);
+  assert.match(appSource, /toggle\.setAttribute\('aria-pressed', String\(enabled\)\)/);
+  assert.match(appSource, /Switch to dark mode/);
+});

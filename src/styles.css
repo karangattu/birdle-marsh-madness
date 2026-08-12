@@ -871,6 +871,11 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 
+:where(button, input, .marsh-stage):focus-visible {
+  outline: 3px solid var(--focus-border);
+  outline-offset: 3px;
+}
+
 .icon {
   width: 1.1em;
   height: 1.1em;
@@ -1350,7 +1355,13 @@ body {
 }
 .analog-timer.is-warn strong { color: var(--bad); }
 @media (prefers-reduced-motion: reduce) {
-  .odometer-reel { transition: none; }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 .analog-timer.is-warn {

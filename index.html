@@ -44,10 +44,10 @@
               <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v14H6a2 2 0 0 1-2 2z"/><path d="M15 3h3a2 2 0 0 1 2 2v15a2 2 0 0 1-2 2h-3z"/></svg>
               Field guide
             </button>
-            <button id="splashDaylightToggle" class="ghost-action daylight-toggle" type="button" aria-label="Toggle daylight mode">
+            <button id="splashDaylightToggle" class="ghost-action daylight-toggle" type="button" aria-label="Switch to daylight mode" aria-pressed="false" data-light-label="Daylight Mode" data-dark-label="Dark Mode">
               <svg class="icon sun-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
               <svg class="icon moon-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
-              <span>Daylight Mode</span>
+              <span class="daylight-label">Daylight Mode</span>
             </button>
           </div>
 
@@ -143,14 +143,14 @@
             <span class="mode-pill" id="modeLabel">Standard · 60s</span>
           </div>
           <div class="hud">
-            <div class="analog-timer" id="analogTimer" aria-label="60 seconds remaining">
+            <div class="analog-timer" id="analogTimer" role="timer" aria-label="60 seconds remaining">
               <svg class="timer-dial" viewBox="0 0 100 100" aria-hidden="true">
                 <circle class="timer-track" cx="50" cy="50" r="43" pathLength="100" />
                 <circle class="timer-progress" cx="50" cy="50" r="43" pathLength="100" />
                 <line class="timer-hand" x1="50" y1="50" x2="50" y2="18" />
                 <circle class="timer-pin" cx="50" cy="50" r="3" />
               </svg>
-              <strong id="timeRemaining">60</strong>
+              <strong id="timeRemaining" aria-hidden="true">60</strong>
             </div>
             <div class="hud-meter">
               <span>Found</span><strong id="foundCount">0/0</strong>
@@ -159,10 +159,10 @@
               <span>Misses</span><strong id="misses">0</strong>
             </div>
           </div>
-          <button id="gameDaylightToggle" class="ghost-action game-daylight-toggle daylight-toggle" type="button" aria-label="Toggle daylight mode">
+          <button id="gameDaylightToggle" class="ghost-action game-daylight-toggle daylight-toggle" type="button" aria-label="Switch to daylight mode" aria-pressed="false" data-light-label="Daylight" data-dark-label="Dark">
             <svg class="icon sun-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
             <svg class="icon moon-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
-            <span>Daylight</span>
+            <span class="daylight-label">Daylight</span>
           </button>
           <button id="quitButton" class="ghost-action game-quit-button" type="button" aria-label="Quit round and return home">
             <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
@@ -192,7 +192,7 @@
         </div>
 
         <div class="playfield">
-          <div class="marsh-stage" id="marshStage">
+          <div class="marsh-stage" id="marshStage" role="region" tabindex="0" aria-label="Marsh view. Drag to scan, use arrow keys to move the scope, and plus or minus to zoom.">
             <div class="marsh-content distant" id="distantContent">
               <img class="marsh-backdrop" src="assets/marsh_backdrop.png" alt="" />
               <div class="bird-layer" id="distantBirds"></div>
@@ -209,7 +209,7 @@
             </div>
             <img class="scope-decoration" src="assets/looking_through_scope.png" alt="" aria-hidden="true" />
             <div class="zoom-indicator" id="zoomIndicator" aria-hidden="true">4.2×</div>
-            <div class="scope-hint" id="scopeHint">Drag anywhere on the marsh to look around</div>
+            <div class="scope-hint" id="scopeHint">Drag to scan · scroll, pinch, or +/− to zoom</div>
             <div class="feedback" id="feedback" aria-live="polite"></div>
           </div>
         </div>
