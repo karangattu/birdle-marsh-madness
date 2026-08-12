@@ -12,7 +12,7 @@
     <meta name="apple-mobile-web-app-title" content="Marsh Madness" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <link rel="preload" href="assets/fonts/mona-sans.woff2" as="font" type="font/woff2" crossorigin />
-    <link rel="stylesheet" href="src/styles.css" />
+    <link rel="stylesheet" href="src/styles.css?v=27" />
   </head>
   <body>
     <main class="app" id="app">
@@ -44,11 +44,6 @@
             <button id="splashFieldGuide" class="ghost-action" type="button" aria-label="Open the bird field guide">
               <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v14H6a2 2 0 0 1-2 2z"/><path d="M15 3h3a2 2 0 0 1 2 2v15a2 2 0 0 1-2 2h-3z"/></svg>
               Field guide
-            </button>
-            <button id="splashEnvironmentToggle" class="ghost-action environment-toggle" type="button" aria-label="Switch to outdoors mode" aria-pressed="false" data-outdoor-label="Outdoors" data-indoor-label="Indoors">
-              <svg class="icon outdoor-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
-              <svg class="icon indoor-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m3 11 9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></svg>
-              <span class="environment-label">Outdoors</span>
             </button>
           </div>
 
@@ -160,11 +155,6 @@
               <span>Misses</span><strong id="misses">0</strong>
             </div>
           </div>
-          <button id="gameEnvironmentToggle" class="ghost-action game-environment-toggle environment-toggle" type="button" aria-label="Switch to outdoors mode" aria-pressed="false" data-outdoor-label="Outdoors" data-indoor-label="Indoors">
-            <svg class="icon outdoor-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
-            <svg class="icon indoor-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m3 11 9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></svg>
-            <span class="environment-label">Outdoors</span>
-          </button>
           <button id="quitButton" class="ghost-action game-quit-button" type="button" aria-label="Quit round and return home">
             <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
             Quit
@@ -305,7 +295,7 @@
     <audio id="tutorialAudio" src="assets/tutorial_sound.mp3" loop preload="auto"></audio>
     <audio id="gameAudio" src="assets/marsh_sounds.mp3" loop preload="auto"></audio>
 
-    <script type="module" src="src/app.js"></script>
+    <script type="module" src="src/app.js?v=27"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   </body>
 </html>

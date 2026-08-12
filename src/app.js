@@ -142,57 +142,9 @@ const els = {
   leaderboardNameStatus: $('leaderboardNameStatus'),
   resultRestart: $('resultRestart'),
   resultHome: $('resultHome'),
-  splashEnvironmentToggle: $('splashEnvironmentToggle'),
-  gameEnvironmentToggle: $('gameEnvironmentToggle'),
 };
 
-const VIEWING_MODE_KEY = 'marsh-madness-viewing-mode';
-const LEGACY_DAYLIGHT_MODE_KEY = 'marsh-madness-daylight-mode';
 let wakeLock = null;
-
-function applyOutdoorMode(enabled) {
-  if (enabled) {
-    document.body.classList.add('outdoor-mode');
-    const themeColorMeta = document.querySelector('meta[name="theme-color"]');
-    if (themeColorMeta) {
-      themeColorMeta.setAttribute('content', '#fffef8');
-    }
-  } else {
-    document.body.classList.remove('outdoor-mode');
-    const themeColorMeta = document.querySelector('meta[name="theme-color"]');
-    if (themeColorMeta) {
-      themeColorMeta.setAttribute('content', '#06211b');
-    }
-  }
-  for (const toggle of [els.splashEnvironmentToggle, els.gameEnvironmentToggle]) {
-    if (!toggle) continue;
-    toggle.setAttribute('aria-pressed', String(enabled));
-    toggle.setAttribute('aria-label', enabled ? 'Switch to indoors mode' : 'Switch to outdoors mode');
-    const label = toggle.querySelector('.environment-label');
-    if (label) label.textContent = enabled ? toggle.dataset.indoorLabel : toggle.dataset.outdoorLabel;
-  }
-  try {
-    localStorage.setItem(VIEWING_MODE_KEY, enabled ? 'outdoor' : 'indoor');
-  } catch { /* ignore */ }
-}
-
-function initViewingMode() {
-  let isOutdoor = false;
-  try {
-    const saved = localStorage.getItem(VIEWING_MODE_KEY);
-    isOutdoor = saved ? saved === 'outdoor' : localStorage.getItem(LEGACY_DAYLIGHT_MODE_KEY) === 'true';
-  } catch { /* ignore */ }
-  applyOutdoorMode(isOutdoor);
-
-  const toggles = [els.splashEnvironmentToggle, els.gameEnvironmentToggle];
-  for (const toggle of toggles) {
-    if (toggle) {
-      toggle.addEventListener('click', () => {
-        applyOutdoorMode(!document.body.classList.contains('outdoor-mode'));
-      });
-    }
-  }
-}
 
 async function requestWakeLock() {
   try {
@@ -941,8 +893,10 @@ function onBirdButtonClick(e) {
 function markBirdFound(birdId) {
   for (const layer of [els.distantBirds, els.magnifiedBirds]) {
     const el = layer.querySelector(`[data-bird-id="${cssEscape(birdId)}"]`);
-    if (el) el.classList.add('is-found');
+    if (el) el.remove();
   }
+  focusedBirdId = null;
+  els.eyepiece.classList.remove('is-on-target');
   const btn = els.birdButtons.querySelector(`[data-bird-id="${cssEscape(birdId)}"]`);
   if (btn) {
     btn.classList.add('is-found');
@@ -1927,12 +1881,12 @@ function scoreTierFor(scoreValue) {
 
 // ---------------- Wiring ----------------
 function init() {
+  document.body.classList.remove('outdoor-mode');
   preloadImages();
   renderBirdButtons();
   attachStageListeners();
   attachTutorialDemoListeners();
   setSelectedMode(selectedMode);
-  initViewingMode();
   lastHud = { remainingSeconds: GAME_MODE_LENGTH_SECONDS[selectedMode], foundCount: 0, misses: 0 };
   renderInstallPrompt();
 

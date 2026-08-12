@@ -247,13 +247,12 @@ test('start and restart paths call unlockAudioContext', () => {
   assert.match(appSource, /function startRound\([^)]*\) \{\s*unlockAudioContext\(\)/);
 });
 
-test('indoor and outdoor modes toggle and preserve older daylight preferences', () => {
-  assert.match(html, /id="splashEnvironmentToggle"/);
-  assert.match(html, /id="gameEnvironmentToggle"/);
-  assert.match(html, />Outdoors<\/span>/);
-  assert.match(styles, /body\.outdoor-mode/);
-  assert.match(appSource, /function initViewingMode\(\)/);
-  assert.match(appSource, /LEGACY_DAYLIGHT_MODE_KEY/);
+test('game uses one consistent viewing mode', () => {
+  assert.doesNotMatch(html, /EnvironmentToggle/);
+  assert.match(html, /src\/styles\.css\?v=27/);
+  assert.match(html, /src\/app\.js\?v=27/);
+  assert.match(appSource, /classList\.remove\('outdoor-mode'\)/);
+  assert.doesNotMatch(styles, /outdoor-mode/);
   assert.match(appSource, /async function requestWakeLock\(\)/);
   assert.match(appSource, /function releaseWakeLock\(\)/);
 });
@@ -267,11 +266,11 @@ test('game interaction polish supports keyboard play and safe completed buttons'
   assert.match(styles, /:where\(button, input, \.marsh-stage\):focus-visible/);
 });
 
-test('environment controls announce their current action', () => {
-  assert.match(html, /id="splashEnvironmentToggle"[^>]*aria-pressed="false"/);
-  assert.match(appSource, /toggle\.setAttribute\('aria-pressed', String\(enabled\)\)/);
-  assert.match(appSource, /Switch to indoors mode/);
-  assert.match(appSource, /Switch to outdoors mode/);
+test('correctly identified birds are removed from both rendered layers', () => {
+  assert.match(appSource, /for \(const layer of \[els\.distantBirds, els\.magnifiedBirds\]\)/);
+  assert.match(appSource, /if \(el\) el\.remove\(\)/);
+  assert.match(appSource, /focusedBirdId = null/);
+  assert.doesNotMatch(styles, /\.marsh-bird\.is-found/);
 });
 
 test('Mona Sans is bundled and preloaded for offline play', () => {
