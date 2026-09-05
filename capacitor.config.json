@@ -1,0 +1,8 @@
+{
+  "appId": "org.sfbbo.marshmadness",
+  "appName": "Marsh Madness",
+  "webDir": "dist",
+  "android": {
+    "backgroundColor": "#06211b"
+  }
+}

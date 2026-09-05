@@ -6,6 +6,15 @@
   "scripts": {
     "test": "node --test tests/*.test.mjs",
     "process:birds": ".venv/bin/python scripts/process_birds.py",
-    "serve": "python3 -m http.server 4173"
+    "serve": "python3 -m http.server 4173",
+    "build:web": "node scripts/build_dist.js",
+    "sync:android": "npm run build:web && npx cap sync android",
+    "build:android": "npm run build:web && npx cap sync android && cd android && JAVA_HOME=\"/Applications/Android Studio.app/Contents/jbr/Contents/Home\" ./gradlew assembleDebug",
+    "open:android": "npx cap open android"
+  },
+  "devDependencies": {
+    "@capacitor/android": "^8.5.1",
+    "@capacitor/cli": "^8.5.1",
+    "@capacitor/core": "^8.5.1"
   }
 }

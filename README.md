@@ -26,3 +26,9 @@ npm run serve
 ```
 
 Open `http://localhost:4173`.
+
+## Android APK
+
+Installable APK: [`releases/MarshMadness.apk`](releases/MarshMadness.apk)
+
+Build from source: `npm run build:android`
