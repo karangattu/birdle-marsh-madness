@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -55,4 +56,13 @@ test("release APK is present in releases directory", () => {
   assert.ok(fs.existsSync(apkPath));
   const stats = fs.statSync(apkPath);
   assert.ok(stats.size > 1000000);
+});
+
+test("release APK bundles latest web assets including bird headshots", () => {
+  const apkPath = path.resolve("releases/MarshMadness.apk");
+  assert.ok(fs.existsSync(apkPath));
+  const listing = execFileSync("unzip", ["-l", apkPath], { encoding: "utf8" });
+  assert.ok(listing.includes("assets/public/assets/mallard_headshot.png"));
+  assert.ok(listing.includes("assets/public/src/app.js"));
+  assert.ok(listing.includes("assets/public/index.html"));
 });

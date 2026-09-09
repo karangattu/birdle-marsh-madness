@@ -9,7 +9,7 @@
     "serve": "python3 -m http.server 4173",
     "build:web": "node scripts/build_dist.js",
     "sync:android": "npm run build:web && npx cap sync android",
-    "build:android": "npm run build:web && npx cap sync android && cd android && JAVA_HOME=\"/Applications/Android Studio.app/Contents/jbr/Contents/Home\" ./gradlew assembleDebug",
+    "build:android": "npm run build:web && npx cap sync android && (cd android && JAVA_HOME=\"/Applications/Android Studio.app/Contents/jbr/Contents/Home\" ./gradlew assembleDebug) && cp android/app/build/outputs/apk/debug/app-debug.apk releases/MarshMadness.apk",
     "open:android": "npx cap open android"
   },
   "devDependencies": {
