@@ -12,7 +12,7 @@
     <meta name="apple-mobile-web-app-title" content="Marsh Madness" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <link rel="preload" href="assets/fonts/mona-sans.woff2" as="font" type="font/woff2" crossorigin />
-    <link rel="stylesheet" href="src/styles.css?v=28" />
+    <link rel="stylesheet" href="src/styles.css?v=29" />
   </head>
   <body>
     <main class="app" id="app">
@@ -111,7 +111,7 @@
             </div>
           </div>
           <div class="tutorial-demo-buttons" hidden>
-            <button class="bird-button demo-button" id="demoMallardButton" type="button">Mallard</button>
+            <button class="bird-button demo-button" id="demoMallardButton" type="button"><img class="bird-button-headshot" src="assets/mallard_headshot.png" alt="" draggable="false" /><span>Mallard</span></button>
             <button class="bird-button demo-button dim" type="button">Great Egret</button>
             <button class="bird-button demo-button dim" type="button">Song Sparrow</button>
           </div>
@@ -295,7 +295,7 @@
     <audio id="tutorialAudio" src="assets/tutorial_sound.mp3" loop preload="auto"></audio>
     <audio id="gameAudio" src="assets/marsh_sounds.mp3" loop preload="auto"></audio>
 
-    <script type="module" src="src/app.js?v=28"></script>
+    <script type="module" src="src/app.js?v=29"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   </body>
 </html>

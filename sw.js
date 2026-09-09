@@ -1,11 +1,11 @@
-const CACHE_NAME = 'birdle-marsh-madness-v28';
+const CACHE_NAME = 'birdle-marsh-madness-v29';
 
 const APP_SHELL = [
   './',
   './index.html',
   './manifest.webmanifest',
-  './src/styles.css?v=28',
-  './src/app.js?v=28',
+  './src/styles.css?v=29',
+  './src/app.js?v=29',
   './src/gameLogic.js',
   './assets/fonts/mona-sans.woff2',
   './assets/marsh_madness_poster.png',
@@ -29,7 +29,19 @@ const APP_SHELL = [
   './assets/northern_shoveler.png',
   './assets/red-winged_blackbird.png',
   './assets/snowy_egret.png',
-  './assets/song_sparrow.png'
+  './assets/song_sparrow.png',
+  './assets/american_avocet_headshot.png',
+  './assets/american_coot_headshot.png',
+  './assets/black-necked_stilt_headshot.png',
+  './assets/canada_goose_headshot.png',
+  './assets/cinnamon_teal_headshot.png',
+  './assets/great_egret_headshot.png',
+  './assets/mallard_headshot.png',
+  './assets/marsh_wren_headshot.png',
+  './assets/northern_shoveler_headshot.png',
+  './assets/red-winged_blackbird_headshot.png',
+  './assets/snowy_egret_headshot.png',
+  './assets/song_sparrow_headshot.png'
 ];
 
 self.addEventListener('install', (event) => {

@@ -27,7 +27,7 @@ const BIRDS = [
   { id: 'red-winged_blackbird',  name: 'Red-winged Blackbird', difficulty: 'hard' },
   { id: 'snowy_egret',           name: 'Snowy Egret', difficulty: 'easy' },
   { id: 'song_sparrow',          name: 'Song Sparrow', difficulty: 'hard' },
-].map((b) => ({ ...b, image: `assets/${b.id}.png` }));
+].map((b) => ({ ...b, image: `assets/${b.id}.png`, headshot: `assets/${b.id}_headshot.png` }));
 
 const LEGACY_BEST_TIME_KEY = 'birdle:bestTimeSeconds';
 const LEGACY_HIGH_SCORE_KEY = 'birdle:highScore';
@@ -862,7 +862,13 @@ function renderBirdButtons() {
     btn.type = 'button';
     btn.className = 'bird-button';
     btn.dataset.birdId = bird.id;
-    btn.innerHTML = `<span>${bird.name}</span><span class="check" aria-hidden="true">${ICONS.check}</span>`;
+    const headshot = document.createElement('img');
+    headshot.className = 'bird-button-headshot';
+    headshot.src = bird.headshot;
+    headshot.alt = '';
+    headshot.draggable = false;
+    btn.appendChild(headshot);
+    btn.insertAdjacentHTML('beforeend', `<span>${bird.name}</span><span class="check" aria-hidden="true">${ICONS.check}</span>`);
     btn.addEventListener('click', onBirdButtonClick);
     els.birdButtons.appendChild(btn);
   }
@@ -1964,7 +1970,7 @@ function preloadImages() {
     'assets/marsh_madness_poster.png',
     'assets/marsh_backdrop.png',
     'assets/poster.png',
-    ...BIRDS.map((b) => b.image),
+    ...BIRDS.flatMap((b) => [b.image, b.headshot]),
   ];
   for (const url of urls) {
     const img = new Image();
