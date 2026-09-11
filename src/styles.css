@@ -1713,6 +1713,36 @@ body {
   flex-wrap: wrap;
 }
 
+.bird-choice-instructions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 0;
+  color: var(--text);
+  font-size: 0.8rem;
+  line-height: 1.25;
+  text-align: center;
+}
+
+.bird-choice-instructions > span {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--btn-primary-text);
+  font-size: 0.9rem;
+  font-weight: 900;
+}
+
+.bird-choice-instructions strong {
+  color: var(--accent);
+  font-weight: 850;
+}
+
 .bird-buttons {
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
@@ -2296,6 +2326,8 @@ body {
   .feedback { top: 8px; padding: 5px 12px; font-size: 0.8rem; }
   .controls-panel { padding: 4px 8px calc(4px + env(safe-area-inset-bottom, 0px)); gap: 4px; }
   .controls-actions { gap: 6px; }
+  .bird-choice-instructions { gap: 5px; font-size: 0.67rem; line-height: 1.1; }
+  .bird-choice-instructions > span { width: 16px; height: 16px; font-size: 0.7rem; }
   .ghost-action { padding: 6px 12px; font-size: 0.8rem; }
   .bird-buttons { gap: 4px; grid-template-columns: repeat(6, minmax(0, 1fr)); }
   .bird-button {
