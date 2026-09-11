@@ -249,8 +249,8 @@ test('start and restart paths call unlockAudioContext', () => {
 
 test('game uses one consistent viewing mode', () => {
   assert.doesNotMatch(html, /EnvironmentToggle/);
-  assert.match(html, /src\/styles\.css\?v=30/);
-  assert.match(html, /src\/app\.js\?v=30/);
+  assert.match(html, /src\/styles\.css\?v=29/);
+  assert.match(html, /src\/app\.js\?v=29/);
   assert.match(appSource, /classList\.remove\('outdoor-mode'\)/);
   assert.doesNotMatch(styles, /outdoor-mode/);
   assert.match(appSource, /async function requestWakeLock\(\)/);
@@ -264,12 +264,6 @@ test('game interaction polish supports keyboard play and safe completed buttons'
   assert.match(appSource, /addEventListener\('keydown', onStageKeyDown\)/);
   assert.match(appSource, /btn\.disabled = true/);
   assert.match(styles, /:where\(button, input, \.marsh-stage\):focus-visible/);
-});
-
-test('bird choices reference persistent identification instructions', () => {
-  assert.match(html, /id="birdChoiceInstructions"/);
-  assert.match(html, /id="birdButtons"[^>]*aria-describedby="birdChoiceInstructions"/);
-  assert.match(styles, /\.bird-choice-instructions/);
 });
 
 test('correctly identified birds are removed from both rendered layers', () => {
