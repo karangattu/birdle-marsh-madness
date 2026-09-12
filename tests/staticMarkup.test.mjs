@@ -161,6 +161,17 @@ test('result screen includes payoff and progress lines', () => {
   assert.match(appSource, /New \$\{modeDetail\.label\} high score/);
 });
 
+test('result screen highlights birds spotted out of the total with a percentage', () => {
+  assert.match(html, /id="resultFound"/);
+  assert.match(html, /id="resultFoundCount"/);
+  assert.match(html, /id="resultFoundTotal"/);
+  assert.match(html, /id="resultFoundFill"/);
+  assert.match(html, /role="progressbar"/);
+  assert.match(appSource, /function renderResultFound\(/);
+  assert.match(appSource, /% of the marsh spotted/);
+  assert.match(styles, /\.result-found-fill/);
+});
+
 test('game screen can quit an active round back to the home screen', () => {
   assert.match(html, /id="quitButton"/);
   assert.match(html, /Quit round and return home/);
@@ -249,8 +260,8 @@ test('start and restart paths call unlockAudioContext', () => {
 
 test('game uses one consistent viewing mode', () => {
   assert.doesNotMatch(html, /EnvironmentToggle/);
-  assert.match(html, /src\/styles\.css\?v=31/);
-  assert.match(html, /src\/app\.js\?v=31/);
+  assert.match(html, /src\/styles\.css\?v=32/);
+  assert.match(html, /src\/app\.js\?v=32/);
   assert.match(appSource, /classList\.remove\('outdoor-mode'\)/);
   assert.doesNotMatch(styles, /outdoor-mode/);
   assert.match(appSource, /async function requestWakeLock\(\)/);

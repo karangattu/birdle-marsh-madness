@@ -116,6 +116,12 @@ const els = {
   fieldGuideOverlay: $('fieldGuideOverlay'),
   fieldGuideClose: $('fieldGuideClose'),
   resultTitle: $('resultTitle'),
+  resultFound: $('resultFound'),
+  resultFoundCount: $('resultFoundCount'),
+  resultFoundTotal: $('resultFoundTotal'),
+  resultFoundTrack: $('resultFoundTrack'),
+  resultFoundFill: $('resultFoundFill'),
+  resultFoundPercent: $('resultFoundPercent'),
   resultStats: $('resultStats'),
   resultBest: $('resultBest'),
   resultCompare: $('resultCompare'),
@@ -1660,10 +1666,11 @@ function showResultScreen() {
   const won = state.isWon;
   const tier = scoreTierFor(finalScore);
   els.resultTitle.textContent = won ? `${modeDetail.label}: You spotted them all — ${tier.label}` : `${modeDetail.label}: ${tier.label}`;
+  renderResultFound(state.foundIds.size, state.birds.length);
   const seconds = won ? state.finishedSeconds : (state.roundLengthSeconds ?? GAME_LENGTH_SECONDS);
   els.resultStats.innerHTML = won
-    ? `Found <strong>${state.foundIds.size}/${state.birds.length}</strong> in <strong>${seconds}s</strong> with <strong>${state.misses}</strong> misses.<br>${modeDetail.label} score: <strong>${finalScore}</strong>`
-    : `Found <strong>${state.foundIds.size}/${state.birds.length}</strong> birds with <strong>${state.misses}</strong> misses.<br>${modeDetail.label} score: <strong>${finalScore}</strong>`;
+    ? `Cleared the marsh in <strong>${seconds}s</strong> with <strong>${state.misses}</strong> misses.<br>${modeDetail.label} score: <strong>${finalScore}</strong>`
+    : `Time ran out with <strong>${state.misses}</strong> misses.<br>${modeDetail.label} score: <strong>${finalScore}</strong>`;
 
   const summaryLines = [highScore.isNew ? `New ${modeDetail.label} high score: ${highScore.highScore}!` : `${modeDetail.label} high score: ${highScore.highScore}`];
   if (won) {
@@ -1691,6 +1698,24 @@ function showResultScreen() {
   refreshBestTimeLabel();
   startLeaderboardPoll(leaderboardModeForGameMode(mode));
   prepareLeaderboardNameEntry(finalScore, seconds, won, mode);
+}
+
+function renderResultFound(foundCount, totalBirds) {
+  const total = Math.max(1, totalBirds);
+  const percent = Math.round((foundCount / total) * 100);
+  const isComplete = foundCount >= totalBirds;
+  els.resultFound.classList.toggle('is-complete', isComplete);
+  els.resultFoundCount.textContent = String(foundCount);
+  els.resultFoundTotal.textContent = String(totalBirds);
+  els.resultFoundTrack.setAttribute('aria-valuemax', String(totalBirds));
+  els.resultFoundTrack.setAttribute('aria-valuenow', String(foundCount));
+  els.resultFoundPercent.textContent = isComplete
+    ? `All ${totalBirds} birds spotted — 100%`
+    : `${percent}% of the marsh spotted`;
+  els.resultFoundFill.style.width = '0%';
+  requestAnimationFrame(() => {
+    els.resultFoundFill.style.width = `${percent}%`;
+  });
 }
 
 function scoreTierFor(scoreValue) {
