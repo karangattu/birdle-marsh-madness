@@ -2375,10 +2375,13 @@ body {
   .bird-button:hover { transform: none; }
 }
 
-/* Tablet / short landscape: side-by-side tutorial so actions fit without scrolling.
-   Covers landscape tablets (typically 600-900px tall) that are too tall for the
-   compact phone-landscape rules above but too short for the stacked desktop layout. */
-@media (orientation: landscape) and (min-height: 481px) and (max-height: 900px) {
+/* Tablet / landscape: side-by-side tutorial so actions fit without scrolling.
+   Covers landscape tablets that are too tall for the compact phone-landscape
+   rules above but too short for the stacked desktop layout. Deliberately no
+   max-height ceiling: entering fullscreen or showing/hiding the browser toolbar
+   changes the viewport height on tap, and a height-capped query would flip the
+   card back to the stacked layout on first interaction. */
+@media (orientation: landscape) and (min-width: 700px) and (min-height: 481px) {
   .screen-tutorial { padding: 12px; }
   .tutorial-card.visual-tutorial {
     display: grid;

@@ -218,6 +218,11 @@ test('tutorial eyepiece itself accepts drag input', () => {
   assert.match(styles, /\.tutorial-demo-scope[\s\S]*pointer-events:\s*auto/);
 });
 
+test('landscape tutorial layout does not flip on viewport height changes', () => {
+  assert.match(styles, /@media \(orientation: landscape\) and \(min-width: 700px\) and \(min-height: 481px\)/);
+  assert.doesNotMatch(styles, /max-height: 900px/);
+});
+
 test('birds and spotting scope no longer pulse or bob', () => {
   assert.doesNotMatch(styles, /tutorial-bird-bob/);
   assert.doesNotMatch(styles, /bird-bob/);
@@ -260,8 +265,8 @@ test('start and restart paths call unlockAudioContext', () => {
 
 test('game uses one consistent viewing mode', () => {
   assert.doesNotMatch(html, /EnvironmentToggle/);
-  assert.match(html, /src\/styles\.css\?v=33/);
-  assert.match(html, /src\/app\.js\?v=33/);
+  assert.match(html, /src\/styles\.css\?v=34/);
+  assert.match(html, /src\/app\.js\?v=34/);
   assert.match(appSource, /classList\.remove\('outdoor-mode'\)/);
   assert.doesNotMatch(styles, /outdoor-mode/);
   assert.match(appSource, /async function requestWakeLock\(\)/);

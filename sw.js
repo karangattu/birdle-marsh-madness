@@ -1,11 +1,11 @@
-const CACHE_NAME = 'birdle-marsh-madness-v33';
+const CACHE_NAME = 'birdle-marsh-madness-v34';
 
 const APP_SHELL = [
   './',
   './index.html',
   './manifest.webmanifest',
-  './src/styles.css?v=33',
-  './src/app.js?v=33',
+  './src/styles.css?v=34',
+  './src/app.js?v=34',
   './src/gameLogic.js',
   './assets/fonts/mona-sans.woff2',
   './assets/marsh_madness_poster.png',
