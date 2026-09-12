@@ -37,16 +37,16 @@ test('game catalog exposes 12 bird buttons including Cinnamon Teal', () => {
   assert.match(birdCatalog, /cinnamon_teal/);
 });
 
-test('game uses adjustable magnification: base 4.2x with up to +5x via scroll and pinch', () => {
+test('spotting scope uses a fixed magnification with no adjustable zoom controls', () => {
   assert.doesNotMatch(html, /id="zoomControls"/);
-  assert.match(appSource, /const DEFAULT_ZOOM = 4\.2;/);
-  assert.match(appSource, /const MIN_ZOOM = DEFAULT_ZOOM;/);
-  assert.match(appSource, /const MAX_ZOOM = MIN_ZOOM \+ 5;/);
-  assert.match(appSource, /function clampZoom\(/);
-  assert.match(appSource, /function setZoom\(/);
-  assert.match(appSource, /function onWheel\(/);
-  assert.match(appSource, /function startPinch\(/);
-  assert.match(html, /id="zoomIndicator"/);
+  assert.doesNotMatch(html, /id="zoomIndicator"/);
+  assert.doesNotMatch(html, /id="tutorialZoomIndicator"/);
+  assert.match(appSource, /const magnify = parseFloat\(cs\.getPropertyValue\('--magnify'\)\)/);
+  assert.doesNotMatch(appSource, /function setZoom\(/);
+  assert.doesNotMatch(appSource, /function clampZoom\(/);
+  assert.doesNotMatch(appSource, /function onWheel\(/);
+  assert.doesNotMatch(appSource, /function startPinch\(/);
+  assert.doesNotMatch(appSource, /tutorialIsPinching/);
   assert.match(html, /id="gameAudio"/);
   assert.match(html, /src="assets\/marsh_sounds\.mp3"/);
   assert.match(html, /loop/);
@@ -249,8 +249,8 @@ test('start and restart paths call unlockAudioContext', () => {
 
 test('game uses one consistent viewing mode', () => {
   assert.doesNotMatch(html, /EnvironmentToggle/);
-  assert.match(html, /src\/styles\.css\?v=29/);
-  assert.match(html, /src\/app\.js\?v=29/);
+  assert.match(html, /src\/styles\.css\?v=31/);
+  assert.match(html, /src\/app\.js\?v=31/);
   assert.match(appSource, /classList\.remove\('outdoor-mode'\)/);
   assert.doesNotMatch(styles, /outdoor-mode/);
   assert.match(appSource, /async function requestWakeLock\(\)/);
@@ -259,9 +259,11 @@ test('game uses one consistent viewing mode', () => {
 
 test('game interaction polish supports keyboard play and safe completed buttons', () => {
   assert.match(html, /id="marshStage"[^>]*role="region"[^>]*tabindex="0"/);
-  assert.match(html, /scroll, pinch, or \+\/− to zoom/);
+  assert.match(html, /Drag to scan the marsh/);
+  assert.doesNotMatch(html, /zoomIndicator/);
   assert.match(appSource, /function onStageKeyDown\(e\)/);
   assert.match(appSource, /addEventListener\('keydown', onStageKeyDown\)/);
+  assert.doesNotMatch(appSource, /addEventListener\('wheel'/);
   assert.match(appSource, /btn\.disabled = true/);
   assert.match(styles, /:where\(button, input, \.marsh-stage\):focus-visible/);
 });

@@ -21,7 +21,6 @@
   --panel-strong: rgba(8, 24, 20, 0.92);
   --eyepiece-radius: clamp(86px, 13vmin, 150px);
   --magnify: 4.2;
-  --zoom-norm: 0;            /* 0 at base mag, 1 at max mag (drives vignette) */
   --bird-size: clamp(22px, 3vmin, 44px);
   --scope-x: 50%;
   --scope-y: 45%;
@@ -203,6 +202,15 @@ body {
 
 .install-prompt[hidden] { display: none; }
 
+.install-prompt.is-visible {
+  animation: install-prompt-in 260ms ease-out both;
+}
+
+@keyframes install-prompt-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 .install-prompt-copy {
   min-width: 0;
   display: grid;
@@ -308,6 +316,11 @@ body {
   background: var(--mode-btn-hover);
 }
 
+.mode-button:active,
+.mode-option:active {
+  transform: translateY(1px);
+}
+
 .mode-button.is-selected,
 .mode-option.is-active {
   color: var(--btn-primary-text);
@@ -364,6 +377,12 @@ body {
   border-radius: 10px;
   background: var(--panel-item-bg);
   border: 1px solid var(--panel-item-border);
+  transition: border-color 160ms ease, filter 160ms ease;
+}
+
+.leaderboard-entry:hover {
+  border-color: rgba(255, 255, 255, 0.16);
+  filter: brightness(1.08);
 }
 
 .leaderboard-entry.is-new-entry {
@@ -468,6 +487,7 @@ body {
   color: var(--text-dim);
   text-align: center;
   text-shadow: none;
+  transition: border-color 160ms ease, filter 160ms ease;
 }
 
 .score-record strong {
@@ -492,6 +512,11 @@ body {
 .score-record.is-selected {
   border-color: var(--score-record-selected-border);
   box-shadow: var(--score-record-selected-shadow);
+}
+
+.score-record:not(.is-selected):hover {
+  border-color: rgba(255, 255, 255, 0.28);
+  filter: brightness(1.08);
 }
 
 /* ============== TUTORIAL ============== */
@@ -658,7 +683,7 @@ body {
     0 0 0 17px rgba(80, 69, 50, 0.9),
     0 0 0 20px var(--eyepiece-highlight-ring),
     0 0 90px 34px rgba(0, 0, 0, 0.58) inset,
-    0 0 calc(20px + 90px * var(--tutorial-zoom-norm, 0)) calc(8px + 34px * var(--tutorial-zoom-norm, 0)) rgba(0, 0, 0, calc(0.18 + 0.46 * var(--tutorial-zoom-norm, 0))) inset,
+    0 0 20px 8px rgba(0, 0, 0, 0.18) inset,
     0 30px 60px rgba(0, 0, 0, 0.6);
   pointer-events: auto;
   cursor: grab;
@@ -742,20 +767,6 @@ body {
 
 .tutorial-demo.is-dragging .tutorial-step-hint,
 .tutorial-step-hint.is-hidden { opacity: 0; }
-
-/* Tutorial zoom indicator (mirrors the in-game zoom indicator) */
-.tutorial-zoom-indicator {
-  top: 10px;
-  left: 10px;
-  right: auto;
-  font-size: 13px;
-  padding: 4px 10px;
-  z-index: 7;
-}
-
-.tutorial-zoom-indicator:not(:empty) {
-  border-color: rgba(246, 196, 83, calc(0.35 + 0.5 * var(--tutorial-zoom-norm, 0)));
-}
 
 /* Guided tour pointer that follows the scope during the auto demo */
 .tutorial-guide-pointer {
@@ -878,8 +889,7 @@ body {
 .primary-action,
 .ghost-action,
 .bird-button,
-.mode-button,
-.zoom-button {
+.mode-button {
   font: inherit;
   border-radius: 999px;
   cursor: pointer;
@@ -945,6 +955,7 @@ body {
   font-size: 0.95rem;
 }
 .ghost-action:hover { background: rgba(255, 255, 255, 0.16); }
+.ghost-action:active { transform: translateY(1px); }
 
 /* ============== INTRO VIDEO ============== */
 .screen-intro {
@@ -1254,45 +1265,6 @@ body {
   background: rgba(255, 107, 107, 0.12);
 }
 
-.scope-tools {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  padding: 4px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.zoom-button {
-  min-width: 58px;
-  min-height: 40px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-  padding: 8px 10px;
-  color: var(--text-dim);
-  background: transparent;
-  border: 1px solid transparent;
-  font-size: 0.78rem;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-}
-
-.zoom-button .icon { width: 1em; height: 1em; }
-
-.zoom-button:hover {
-  color: var(--text);
-  background: rgba(255, 255, 255, 0.08);
-}
-
-.zoom-button.is-active {
-  color: var(--btn-primary-text);
-  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
-  box-shadow: 0 8px 20px var(--mode-btn-selected-shadow);
-}
-
 .analog-timer {
   position: relative;
   width: clamp(58px, 8vmin, 78px);
@@ -1570,10 +1542,10 @@ body {
     0 0 0 17px rgba(80, 69, 50, 0.9),
     0 0 0 20px var(--eyepiece-highlight-ring),
     0 0 90px 34px rgba(0, 0, 0, 0.58) inset,
-    0 0 calc(20px + 90px * var(--zoom-norm, 0)) calc(8px + 34px * var(--zoom-norm, 0)) rgba(0, 0, 0, calc(0.18 + 0.46 * var(--zoom-norm, 0))) inset,
+    0 0 20px 8px rgba(0, 0, 0, 0.18) inset,
     0 30px 60px rgba(0, 0, 0, 0.6);
-  transition: box-shadow 220ms ease;
-  z-index: 5;
+   transition: box-shadow 220ms ease;
+   z-index: 5;
 }
 
 .eyepiece::before,
@@ -1633,29 +1605,6 @@ body {
   opacity: 0.95;
   z-index: 4;
   user-select: none;
-}
-
-.zoom-indicator {
-  position: absolute;
-  top: 12px;
-  left: 12px;
-  z-index: 6;
-  padding: 5px 11px;
-  font: 600 14px/1 ui-monospace, "SF Mono", Menlo, Consolas, monospace;
-  letter-spacing: 0.04em;
-  color: var(--text);
-  background: var(--hint-bg);
-  border: 1px solid rgba(246, 196, 83, 0.35);
-  border-radius: 999px;
-  pointer-events: none;
-  user-select: none;
-  backdrop-filter: blur(2px);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
-  transition: border-color 180ms ease;
-}
-
-.zoom-indicator:not(:empty) {
-  border-color: rgba(246, 196, 83, calc(0.35 + 0.5 * var(--zoom-norm, 0)));
 }
 
 .scope-hint {
@@ -1846,6 +1795,7 @@ body {
   color: var(--accent);
   line-height: 1.25;
   word-break: break-word;
+  text-wrap: balance;
 }
 
 .result-stats {
@@ -2234,9 +2184,6 @@ body {
     font-size: 0.82rem;
   }
   .game-quit-button { padding: 4px 10px; min-height: 30px; font-size: 0.7rem; }
-  .scope-tools { gap: 3px; padding: 3px; }
-  .zoom-button { min-width: 44px; min-height: 34px; padding: 6px 7px; font-size: 0.68rem; }
-  .zoom-button .icon { display: none; }
   .analog-timer { width: 44px; height: 44px; }
   .analog-timer strong { font-size: 0.78rem; }
   .hud-meter { padding: 1px 8px; min-width: 46px; border-radius: 10px; }
@@ -2292,7 +2239,6 @@ body {
   .playfield { padding: 6px; }
   .scope-decoration { width: clamp(120px, 22vmin, 220px); opacity: 0.9; }
   .scope-hint { bottom: 8px; padding: 4px 10px; font-size: 0.7rem; }
-  .zoom-indicator { top: 8px; left: 8px; padding: 3px 8px; font-size: 11px; }
   .feedback { top: 8px; padding: 5px 12px; font-size: 0.8rem; }
   .controls-panel { padding: 4px 8px calc(4px + env(safe-area-inset-bottom, 0px)); gap: 4px; }
   .controls-actions { gap: 6px; }
@@ -2350,7 +2296,6 @@ body {
   }
   .top-bar { padding: 10px 12px; }
   .hud { gap: 6px; }
-  .scope-tools { order: 2; width: 100%; justify-content: center; }
   .install-prompt {
     width: min(100%, 360px);
     flex-direction: column;

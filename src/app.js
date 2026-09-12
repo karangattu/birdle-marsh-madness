@@ -37,13 +37,6 @@ const INSTALL_PROMPT_DISMISS_KEY = 'birdle:installPromptDismissed';
 const SUPABASE_URL = 'https://ovwktjjeoowlktdfbuuu.supabase.co';
 const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_B2pz5WTA3UEVUeKACIgmBw_8_r0S3kU';
 const LEADERBOARD_TABLE = 'marsh_madness_leaderboard';
-const DEFAULT_ZOOM = 4.2;
-const MIN_ZOOM = DEFAULT_ZOOM;          // base mag: enough to identify a bird
-const MAX_ZOOM = MIN_ZOOM + 5;          // +5x extra zoom available on demand
-const ZOOM_STEP = 0.6;                  // per wheel notch
-const TUTORIAL_MIN_ZOOM = 3.5;
-const TUTORIAL_MAX_ZOOM = TUTORIAL_MIN_ZOOM + 5;
-const TUTORIAL_ZOOM_STEP = 0.6;
 const LEADERBOARD_LIMIT = 5;
 const PLAYER_LABEL_MAX_LENGTH = 40;
 const MISSED_BIRD_REVEAL_MS = 4000;
@@ -91,7 +84,6 @@ const els = {
   tutorialStepFind: $('tutorialStepFind'),
   tutorialStepGuess: $('tutorialStepGuess'),
   tutorialDemoButtons: document.querySelector('.tutorial-demo-buttons'),
-  tutorialZoomIndicator: $('tutorialZoomIndicator'),
   tutorialGuide: $('tutorialGuide'),
   tutorialGuideText: $('tutorialGuideText'),
   tutorialGuideReplay: $('tutorialGuideReplay'),
@@ -107,7 +99,6 @@ const els = {
   distantBirds: $('distantBirds'),
   magnifiedBirds: $('magnifiedBirds'),
   eyepiece: $('eyepiece'),
-  zoomIndicator: $('zoomIndicator'),
   scopeHint: $('scopeHint'),
   feedback: $('feedback'),
   analogTimer: $('analogTimer'),
@@ -198,7 +189,6 @@ function showScreen(name) {
   activeScreen = name;
   if (name === 'tutorial') {
     resetTutorialDemo();
-    perhapsRunGuidedDemo();
   } else {
     cancelGuidedDemo();
   }
@@ -231,22 +221,12 @@ let hasMoved = false;
 let focusedBirdId = null;
 let feedbackTimer = null;
 let pointerGrabId = null;
-let activePointers = new Map();         // pointerId -> {x, y} for pinch detection
-let isPinching = false;
-let pinchStartDist = 0;
-let pinchStartZoom = MIN_ZOOM;
-let currentZoom = MIN_ZOOM;
 let tutorialScopePos = { x: 0.24, y: 0.58 };
 let tutorialStep = 0;
 let tutorialPointerId = null;
 let tutorialPointerCaptureEl = null;
 let tutorialMallardClicked = false;
 let tutorialNudgeTimer = null;
-let tutorialZoom = TUTORIAL_MIN_ZOOM;
-let tutorialActivePointers = new Map();   // pointerId -> {x, y} for pinch detection
-let tutorialIsPinching = false;
-let tutorialPinchStartDist = 0;
-let tutorialPinchStartZoom = TUTORIAL_MIN_ZOOM;
 let tutorialGuidePlaying = false;
 let tutorialGuideRaf = null;
 let tutorialGuideCancel = false;
@@ -939,12 +919,8 @@ function clamp(v, min, max) { return Math.min(max, Math.max(min, v)); }
 
 function onPointerDown(e) {
   if (!state || state.isOver) return;
+  if (pointerGrabId != null) return;
   els.marshStage.focus({ preventScroll: true });
-  activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
-  if (activePointers.size >= 2) {
-    startPinch();
-    return;
-  }
   pointerGrabId = e.pointerId;
   els.marshStage.setPointerCapture?.(e.pointerId);
   isDragging = true;
@@ -955,64 +931,15 @@ function onPointerDown(e) {
   setScopeFromClient(e.clientX, e.clientY);
 }
 function onPointerMove(e) {
-  if (activePointers.has(e.pointerId)) {
-    activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
-  }
-  if (isPinching) {
-    updatePinch();
-    return;
-  }
   if (!isDragging || e.pointerId !== pointerGrabId) return;
   setScopeFromClient(e.clientX, e.clientY);
 }
 function onPointerUp(e) {
-  activePointers.delete(e.pointerId);
-  if (isPinching) {
-    if (activePointers.size < 2) endPinch();
-    return;
-  }
   if (e.pointerId !== pointerGrabId) return;
   isDragging = false;
   els.marshStage.classList.remove('is-dragging');
   try { els.marshStage.releasePointerCapture?.(e.pointerId); } catch { /* ignore */ }
   pointerGrabId = null;
-}
-
-// ---------------- Pinch-to-zoom ----------------
-function startPinch() {
-  if (isDragging) {
-    isDragging = false;
-    els.marshStage.classList.remove('is-dragging');
-    if (pointerGrabId != null) {
-      try { els.marshStage.releasePointerCapture?.(pointerGrabId); } catch { /* ignore */ }
-    }
-    pointerGrabId = null;
-  }
-  isPinching = true;
-  els.marshStage.classList.add('is-pinching');
-  const pts = [...activePointers.values()];
-  pinchStartDist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y) || 1;
-  pinchStartZoom = currentZoom;
-}
-function updatePinch() {
-  const pts = [...activePointers.values()];
-  if (pts.length < 2) return;
-  const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y) || 1;
-  const ratio = dist / pinchStartDist;
-  setZoom(clampZoom(pinchStartZoom * ratio));
-}
-function endPinch() {
-  isPinching = false;
-  els.marshStage.classList.remove('is-pinching');
-  pinchStartDist = 0;
-}
-
-// ---------------- Wheel-to-zoom ----------------
-function onWheel(e) {
-  if (!state || state.isOver) return;
-  e.preventDefault();
-  const dir = -Math.sign(e.deltaY);
-  setZoom(clampZoom(currentZoom + dir * ZOOM_STEP));
 }
 
 function onStageKeyDown(e) {
@@ -1032,11 +959,6 @@ function onStageKeyDown(e) {
     els.scopeHint.classList.add('is-hidden');
     applyScopeStyle();
     updateFocus();
-    return;
-  }
-  if (['+', '=', '-', '_'].includes(e.key)) {
-    e.preventDefault();
-    setZoom(currentZoom + (e.key === '+' || e.key === '=' ? ZOOM_STEP : -ZOOM_STEP));
   }
 }
 
@@ -1045,7 +967,6 @@ function attachStageListeners() {
   els.marshStage.addEventListener('pointermove', onPointerMove);
   els.marshStage.addEventListener('pointerup', onPointerUp);
   els.marshStage.addEventListener('pointercancel', onPointerUp);
-  els.marshStage.addEventListener('wheel', onWheel, { passive: false });
   els.marshStage.addEventListener('keydown', onStageKeyDown);
 }
 
@@ -1062,7 +983,6 @@ function resetTutorialDemo() {
   els.tutorialStepHint.classList.remove('is-hidden');
   if (els.tutorialDemoButtons) els.tutorialDemoButtons.hidden = true;
   setTutorialStartEnabled(false);
-  setTutorialZoom(TUTORIAL_MIN_ZOOM);
   applyTutorialScopeStyle();
   resetTutorialStepUI();
 }
@@ -1132,60 +1052,12 @@ function updateTutorialFocus(rect = els.tutorialDemo.getBoundingClientRect()) {
   if (isOnTarget && tutorialStep === 1 && !tutorialGuidePlaying) advanceTutorialStep();
 }
 
-// ---------------- Tutorial zoom ----------------
-function clampTutorialZoom(zoom) {
-  return clamp(zoom, TUTORIAL_MIN_ZOOM, TUTORIAL_MAX_ZOOM);
-}
-
-function setTutorialZoom(zoom) {
-  tutorialZoom = clampTutorialZoom(zoom);
-  els.tutorialDemo.style.setProperty('--tutorial-magnify', tutorialZoom.toFixed(2));
-  const zoomNorm = (tutorialZoom - TUTORIAL_MIN_ZOOM) / (TUTORIAL_MAX_ZOOM - TUTORIAL_MIN_ZOOM);
-  els.tutorialDemo.style.setProperty('--tutorial-zoom-norm', zoomNorm.toFixed(3));
-  if (els.tutorialZoomIndicator) {
-    els.tutorialZoomIndicator.textContent = `${tutorialZoom.toFixed(1)}×`;
-  }
-}
-
-function onTutorialWheel(e) {
-  e.preventDefault();
-  const dir = -Math.sign(e.deltaY);
-  setTutorialZoom(clampTutorialZoom(tutorialZoom + dir * TUTORIAL_ZOOM_STEP));
-}
-
-function startTutorialPinch() {
-  if (tutorialPointerId != null) {
-    endTutorialDrag(tutorialPointerId);
-    tutorialPointerId = null;
-  }
-  tutorialIsPinching = true;
-  const pts = [...tutorialActivePointers.values()];
-  tutorialPinchStartDist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y) || 1;
-  tutorialPinchStartZoom = tutorialZoom;
-}
-
-function updateTutorialPinch() {
-  const pts = [...tutorialActivePointers.values()];
-  if (pts.length < 2) return;
-  const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y) || 1;
-  setTutorialZoom(clampTutorialZoom(tutorialPinchStartZoom * (dist / tutorialPinchStartDist)));
-}
-
-function endTutorialPinch() {
-  tutorialIsPinching = false;
-  tutorialPinchStartDist = 0;
-}
-
 function onTutorialPointerDown(e) {
   e.stopPropagation();
   // Let interactive children (e.g. the Replay guide button) handle their own clicks.
   if (e.target.closest && e.target.closest('button')) return;
   if (tutorialGuidePlaying) return;
-  tutorialActivePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
-  if (tutorialActivePointers.size >= 2) {
-    startTutorialPinch();
-    return;
-  }
+  if (tutorialPointerId != null) return;
   if (tutorialStep === 0) advanceTutorialStep();
   tutorialPointerId = e.pointerId;
   tutorialPointerCaptureEl = e.currentTarget;
@@ -1196,24 +1068,12 @@ function onTutorialPointerDown(e) {
 }
 
 function onTutorialPointerMove(e) {
-  if (tutorialActivePointers.has(e.pointerId)) {
-    tutorialActivePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
-  }
   if (tutorialGuidePlaying) return;
-  if (tutorialIsPinching) {
-    updateTutorialPinch();
-    return;
-  }
   if (e.pointerId !== tutorialPointerId) return;
   setTutorialScopeFromClient(e.clientX, e.clientY);
 }
 
 function onTutorialPointerUp(e) {
-  tutorialActivePointers.delete(e.pointerId);
-  if (tutorialIsPinching) {
-    if (tutorialActivePointers.size < 2) endTutorialPinch();
-    return;
-  }
   if (e.pointerId !== tutorialPointerId) return;
   endTutorialDrag(e.pointerId);
 }
@@ -1263,19 +1123,6 @@ function easeInOut(t) {
 
 function lerp(a, b, t) { return a + (b - a) * t; }
 
-function animateTutorialZoom(toZoom, duration, onDone) {
-  const from = tutorialZoom;
-  const t0 = performance.now();
-  function step(now) {
-    if (tutorialGuideCancel) return;
-    const p = clamp((now - t0) / duration, 0, 1);
-    setTutorialZoom(lerp(from, toZoom, easeInOut(p)));
-    if (p < 1) { tutorialGuideRaf = requestAnimationFrame(step); return; }
-    onDone?.();
-  }
-  tutorialGuideRaf = requestAnimationFrame(step);
-}
-
 function runGuidedDemo() {
   if (!els.tutorialDemo) return;
   cancelGuidedDemo();
@@ -1287,7 +1134,6 @@ function runGuidedDemo() {
   els.tutorialHeading.textContent = 'Watch how it works';
   setTutorialStartEnabled(false);
   resetTutorialStepUI();
-  setTutorialZoom(TUTORIAL_MIN_ZOOM);
   setTutorialScopeFrac(0.24, 0.58);
   advanceTutorialStep();
   els.tutorialHeading.textContent = 'Watch how it works';
@@ -1311,21 +1157,17 @@ function runGuidedDemo() {
     advanceTutorialStep();
     showGuideMessage('Line the scope on the Mallard — it glows when you’re on target');
 
-    animateTutorialZoom(TUTORIAL_MIN_ZOOM + 3.2, 900, () => {
+    tutorialGuideTimeouts.push(setTimeout(() => {
       if (tutorialGuideCancel) return;
-      showGuideMessage('Pinch or scroll to zoom in for a closer look');
+      advanceTutorialStep();
+      showGuideMessage('Tap the glowing Mallard to identify the bird');
+      els.demoMallardButton.classList.add('is-highlighted');
       tutorialGuideTimeouts.push(setTimeout(() => {
         if (tutorialGuideCancel) return;
-        advanceTutorialStep();
-        showGuideMessage('Tap the glowing Mallard to identify the bird');
-        els.demoMallardButton.classList.add('is-highlighted');
-        tutorialGuideTimeouts.push(setTimeout(() => {
-          if (tutorialGuideCancel) return;
-          els.demoMallardButton.classList.add('is-found');
-          tutorialGuideTimeouts.push(setTimeout(finishGuidedDemo, 650));
-        }, 1000));
-      }, 1200));
-    });
+        els.demoMallardButton.classList.add('is-found');
+        tutorialGuideTimeouts.push(setTimeout(finishGuidedDemo, 650));
+      }, 1000));
+    }, 1200));
   }
   tutorialGuideRaf = requestAnimationFrame(frame);
 }
@@ -1339,7 +1181,6 @@ function finishGuidedDemo() {
   els.tutorialHeading.textContent = 'Line up a sighting';
   els.tutorialStepHint.classList.remove('is-hidden');
   setTutorialStartEnabled(false);
-  setTutorialZoom(TUTORIAL_MIN_ZOOM);
   setTutorialScopeFrac(0.24, 0.58);
   tutorialStep = 0;
   tutorialMallardClicked = false;
@@ -1367,7 +1208,6 @@ function onDemoMallardClick() {
 function attachTutorialDemoListeners() {
   els.tutorialDemo.addEventListener('pointerdown', onTutorialPointerDown);
   els.tutorialDemoScope.addEventListener('pointerdown', onTutorialPointerDown);
-  els.tutorialDemo.addEventListener('wheel', onTutorialWheel, { passive: false });
   window.addEventListener('pointermove', onTutorialPointerMove);
   window.addEventListener('pointerup', onTutorialPointerUp);
   window.addEventListener('pointercancel', onTutorialPointerUp);
@@ -1378,29 +1218,7 @@ function attachTutorialDemoListeners() {
   els.tutorialWatch.addEventListener('click', runGuidedDemo);
 }
 
-// Auto-play the guided demo whenever the tutorial screen is shown.
-function perhapsRunGuidedDemo() {
-  if (!els.tutorialDemo) return;
-  runGuidedDemo();
-}
-
-// ---------------- Scope zoom and ambience ----------------
-function clampZoom(zoom) {
-  return clamp(zoom, MIN_ZOOM, MAX_ZOOM);
-}
-
-function setZoom(zoom) {
-  currentZoom = clampZoom(zoom);
-  els.marshStage.style.setProperty('--magnify', String(currentZoom));
-  // Drive the optical vignette: 0 at base mag, 1 at max mag.
-  const zoomNorm = (currentZoom - MIN_ZOOM) / (MAX_ZOOM - MIN_ZOOM);
-  els.marshStage.style.setProperty('--zoom-norm', zoomNorm.toFixed(3));
-  if (els.zoomIndicator) {
-    els.zoomIndicator.textContent = `${currentZoom.toFixed(1)}×`;
-  }
-  updateFocus();
-}
-
+// ---------------- Ambience ----------------
 function playMarshAmbience() {
   els.gameAudio.pause();
   els.gameAudio.currentTime = 0;
@@ -1711,7 +1529,6 @@ function startRound(mode = selectedMode) {
   applyScopeStyle();
   renderBirdLayers();
   renderBirdButtons();
-  setZoom(MIN_ZOOM);
   lastHud = { remainingSeconds: state.roundLengthSeconds, foundCount: 0, misses: 0 };
   refreshHud();
 
