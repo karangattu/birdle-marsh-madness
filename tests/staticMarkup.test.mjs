@@ -260,8 +260,8 @@ test('start and restart paths call unlockAudioContext', () => {
 
 test('game uses one consistent viewing mode', () => {
   assert.doesNotMatch(html, /EnvironmentToggle/);
-  assert.match(html, /src\/styles\.css\?v=32/);
-  assert.match(html, /src\/app\.js\?v=32/);
+  assert.match(html, /src\/styles\.css\?v=33/);
+  assert.match(html, /src\/app\.js\?v=33/);
   assert.match(appSource, /classList\.remove\('outdoor-mode'\)/);
   assert.doesNotMatch(styles, /outdoor-mode/);
   assert.match(appSource, /async function requestWakeLock\(\)/);
