@@ -36,12 +36,12 @@ test("capacitor configuration specifies correct app id and assets directory", ()
   assert.equal(config.android?.backgroundColor, "#06211b");
 });
 
-test("android project manifest locks orientation to landscape and enables internet", () => {
+test("android project manifest allows portrait browsing and enables internet", () => {
   const manifestPath = path.resolve("android/app/src/main/AndroidManifest.xml");
   assert.ok(fs.existsSync(manifestPath));
 
   const manifest = fs.readFileSync(manifestPath, "utf-8");
-  assert.match(manifest, /android:screenOrientation="sensorLandscape"/);
+  assert.match(manifest, /android:screenOrientation="unspecified"/);
   assert.match(manifest, /android.permission.INTERNET/);
 });
 

@@ -165,7 +165,6 @@ export function recordGuess(state, guessedBirdId, focusedBirdId, now = Date.now(
     return { correct: false, ignored: true };
   }
   if (!focusedBirdId) {
-    state.misses += 1;
     state.lastGuess = { guessedBirdId, focusedBirdId: null, correct: false, at: now };
     return { correct: false, reason: 'no-focus' };
   }
@@ -284,4 +283,22 @@ function calculateFindSpeedBonus(remainingSeconds, roundLengthSeconds) {
   }
   const clampedRemaining = Math.max(0, Math.min(roundLengthSeconds, remainingSeconds));
   return Math.ceil((clampedRemaining / roundLengthSeconds) * FIND_SPEED_BONUS_MAX);
+}
+
+// Acquire inside the eyepiece; retain the current bird to its edge so small
+// movements or overlapping birds do not unexpectedly change the guess target.
+export function selectFocusedBird(placements, foundIds, scope, width, height, radius, currentId = null) {
+  const candidates = placements.filter((p) => !foundIds.has(p.birdId)).map((p) => ({
+    id: p.birdId,
+    distance: Math.hypot((p.xPct / 100 - scope.x) * width, (p.yPct / 100 - scope.y) * height),
+  }));
+  const current = candidates.find((p) => p.id === currentId);
+  if (current && current.distance <= radius) return current.id;
+  let nearest = null;
+  for (const candidate of candidates) {
+    if (candidate.distance <= radius * 0.85 && (!nearest || candidate.distance < nearest.distance)) {
+      nearest = candidate;
+    }
+  }
+  return nearest?.id ?? null;
 }

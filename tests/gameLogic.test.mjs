@@ -12,6 +12,7 @@ import {
   recordGuess,
   score,
   selectUniqueLeaderboardEntries,
+  selectFocusedBird,
   tickGame,
 } from '../src/gameLogic.js';
 
@@ -122,13 +123,16 @@ test('expert round uses a shorter timer', () => {
   assert.equal(state.remainingSeconds, 45);
 });
 
-test('tapping a bird name with nothing in the eyepiece counts as a miss', () => {
+test('tapping a bird name with nothing in the eyepiece preserves score and misses', () => {
   const state = createGameState({ birds: BIRDS, now: 0 });
-  const result = recordGuess(state, 'mallard', null, 500);
+  recordGuess(state, 'mallard', 'mallard', 100);
+  const previousScore = score(state);
+  const result = recordGuess(state, 'song_sparrow', null, 500);
   assert.equal(result.correct, false);
   assert.equal(result.reason, 'no-focus');
-  assert.equal(state.misses, 1);
-  assert.equal(state.foundIds.size, 0);
+  assert.equal(state.misses, 0);
+  assert.equal(score(state), previousScore);
+  assert.equal(state.foundIds.size, 1);
 });
 
 test('a correct guess only counts when the focused bird matches', () => {
@@ -251,4 +255,18 @@ test('leaderboard qualification compares against the player’s existing best sc
   assert.equal(isTopLeaderboardScore(760, currentTopFive, 5, 'Alice'), false);
   assert.equal(isTopLeaderboardScore(1201, currentTopFive, 5, 'Alice'), true);
   assert.equal(isTopLeaderboardScore(501, currentTopFive, 5, 'Frank'), true);
+});
+
+test('scope acquires nearest bird, retains through jitter, and releases beyond the eyepiece', () => {
+  const placements = [{ birdId: 'a', xPct: 50, yPct: 50 }, { birdId: 'b', xPct: 51, yPct: 50 }];
+  const focus = (x, current = null, found = new Set()) =>
+    selectFocusedBird(placements, found, { x, y: 0.5 }, 1000, 500, 30, current);
+  assert.equal(focus(0.5), 'a');
+  assert.equal(focus(0.51, 'a'), 'a');
+  assert.equal(focus(0.529, 'a'), 'a');
+  assert.equal(focus(0.531, 'a'), 'b');
+  assert.equal(focus(0.55, 'b'), null);
+  assert.equal(focus(0.5, 'a', new Set(['a'])), 'b');
+  assert.equal(focus(0.5, null, new Set(['a', 'b'])), null);
+  assert.equal(focus(0.473), null);
 });

@@ -8,6 +8,7 @@ import {
   normalizeLeaderboardPlayerKey,
   normalizeGameMode,
   selectUniqueLeaderboardEntries,
+  selectFocusedBird,
   recordGuess,
   score,
   tickGame,
@@ -100,6 +101,7 @@ const els = {
   magnifiedBirds: $('magnifiedBirds'),
   eyepiece: $('eyepiece'),
   scopeHint: $('scopeHint'),
+  targetStatus: $('targetStatus'),
   feedback: $('feedback'),
   analogTimer: $('analogTimer'),
   modeLabel: $('modeLabel'),
@@ -218,6 +220,9 @@ function setSelectedMode(mode) {
 
 // ---------------- Game state ----------------
 let state = null;
+let pendingRoundMode = null;
+let orientationPausedAt = null;
+let countdownTimer = null;
 let rafId = null;
 let fieldGuideOpen = false;
 let scopePos = { x: 0.5, y: 0.45 };           // fractions of stage
@@ -621,7 +626,6 @@ function showLeaderboardNameForm(mode, finalScore) {
   els.leaderboardNameForm.hidden = false;
   els.leaderboardNameForm.classList.remove('is-saving', 'is-saved');
   setLeaderboardStatus('result', gameMode, '');
-  requestAnimationFrame(() => els.leaderboardPlayerName.focus({ preventScroll: true }));
 }
 
 function resetLeaderboardNameForm() {
@@ -861,7 +865,7 @@ function renderBirdButtons() {
 }
 
 function onBirdButtonClick(e) {
-  if (!state || state.isOver) return;
+  if (!state || state.isOver || needsLandscape() || !els.countdownOverlay.hidden) return;
   const id = e.currentTarget.dataset.birdId;
   const result = recordGuess(state, id, focusedBirdId, performance.now());
   if (result.correct) {
@@ -870,8 +874,7 @@ function onBirdButtonClick(e) {
     playFoundCue();
     vibrate([40, 30, 40]);
   } else if (result.reason === 'no-focus') {
-    flashFeedback('Nothing in the eyepiece — keep scanning', 'bad');
-    vibrate(18);
+    flashFeedback('Center a bird first', 'neutral');
   } else if (result.reason === 'already-found') {
     flashFeedback('Already logged', 'bad');
   } else if (result.reason === 'wrong-guess') {
@@ -888,6 +891,7 @@ function markBirdFound(birdId) {
     if (el) el.remove();
   }
   focusedBirdId = null;
+  renderTargetStatus();
   els.eyepiece.classList.remove('is-on-target');
   const btn = els.birdButtons.querySelector(`[data-bird-id="${cssEscape(birdId)}"]`);
   if (btn) {
@@ -1252,28 +1256,33 @@ function updateFocus() {
   // (radius / magnify) circle around the scope center.
   const threshold = eyepieceRadiusPx / magnify;
 
-  const sx = scopePos.x * stageRect.width;
-  const sy = scopePos.y * stageRect.height;
-
-  let bestId = null;
-  let bestDist = Infinity;
-  for (const placement of state.placements) {
-    if (state.foundIds.has(placement.birdId)) continue;
-    const bx = (placement.xPct / 100) * stageRect.width;
-    const by = (placement.yPct / 100) * stageRect.height;
-    const d = Math.hypot(bx - sx, by - sy);
-    if (d < threshold && d < bestDist) {
-      bestDist = d;
-      bestId = placement.birdId;
-    }
-  }
+  const bestId = selectFocusedBird(
+    state.placements, state.foundIds, scopePos, stageRect.width, stageRect.height,
+    threshold, focusedBirdId,
+  );
 
   if (bestId !== focusedBirdId) {
     const justAcquired = bestId !== null && focusedBirdId === null;
     focusedBirdId = bestId;
     els.eyepiece.classList.toggle('is-on-target', !!focusedBirdId);
+    renderTargetStatus();
+    if (bestId && els.feedback.textContent === 'Center a bird first') {
+      els.feedback.classList.remove('is-visible');
+    }
     if (justAcquired) vibrate(25);
   }
+}
+
+function renderTargetStatus() {
+  els.targetStatus.textContent = focusedBirdId ? 'Ready to identify' : 'Center a bird to identify';
+  els.targetStatus.classList.toggle('is-ready', !!focusedBirdId);
+  for (const bird of els.magnifiedBirds.children) {
+    bird.classList.toggle('is-target', bird.dataset.birdId === focusedBirdId);
+  }
+}
+
+function needsLandscape() {
+  return window.matchMedia('(orientation: portrait) and (pointer: coarse)').matches;
 }
 
 function parsePx(value) {
@@ -1364,7 +1373,7 @@ function refreshHud() {
 function flashFeedback(text, kind) {
   els.feedback.textContent = text;
   els.feedback.classList.remove('is-good', 'is-bad');
-  els.feedback.classList.add(kind === 'good' ? 'is-good' : 'is-bad');
+  if (kind === 'good' || kind === 'bad') els.feedback.classList.add(`is-${kind}`);
   els.feedback.classList.add('is-visible');
   if (feedbackTimer) clearTimeout(feedbackTimer);
   feedbackTimer = setTimeout(() => {
@@ -1451,6 +1460,9 @@ function pauseTutorialAmbience(reset = false) {
 }
 
 function resetRoundForReplay() {
+  clearTimeout(countdownTimer);
+  pendingRoundMode = null;
+  orientationPausedAt = null;
   if (rafId) {
     cancelAnimationFrame(rafId);
     rafId = null;
@@ -1522,12 +1534,20 @@ function startRound(mode = selectedMode) {
   }
   isRevealingMisses = false;
   showScreen('game');
+  if (needsLandscape()) {
+    pendingRoundMode = gameMode;
+    els.countdownOverlay.hidden = true;
+    return;
+  }
+  pendingRoundMode = null;
+  orientationPausedAt = null;
   els.modeLabel.textContent = `${modeDetail.label} · ${GAME_MODE_LENGTH_SECONDS[gameMode]}s`;
   const scopeBounds = computeScopeArtBounds();
   const placements = createPlacements(BIRDS, Math.random, scopeBounds.xMin, scopeBounds.yMin, gameMode);
   state = createGameState({ birds: BIRDS, now: performance.now(), placements, mode: gameMode });
   scopePos = { x: 0.5, y: 0.45 };
   focusedBirdId = null;
+  renderTargetStatus();
   els.eyepiece.classList.remove('is-on-target');
   els.marshStage.classList.remove('is-revealing-misses');
   els.scopeHint.classList.remove('is-hidden');
@@ -1543,6 +1563,7 @@ function startRound(mode = selectedMode) {
 
   runCountdown(() => {
     els.countdownOverlay.hidden = true;
+    state.startedAt = performance.now();
     playMarshAmbience();
     requestAnimationFrame(() => {
       stageRect = els.marshStage.getBoundingClientRect();
@@ -1557,20 +1578,34 @@ function runCountdown(onDone) {
   const steps = ['3', '2', '1', 'Go!'];
   let i = 0;
   function next() {
+    if (needsLandscape()) {
+      countdownTimer = setTimeout(next, 100);
+      return;
+    }
     if (i >= steps.length) { onDone(); return; }
     els.countdownNumber.textContent = steps[i];
     els.countdownNumber.classList.remove('is-pulse');
     void els.countdownNumber.offsetWidth;
     els.countdownNumber.classList.add('is-pulse');
     i++;
-    setTimeout(next, i >= steps.length ? 500 : 900);
+    countdownTimer = setTimeout(next, i >= steps.length ? 500 : 900);
   }
   next();
 }
 
 function loop() {
   if (!state) return;
-  tickGame(state, performance.now());
+  const now = performance.now();
+  if (needsLandscape()) {
+    orientationPausedAt ??= now;
+    rafId = requestAnimationFrame(loop);
+    return;
+  }
+  if (orientationPausedAt !== null) {
+    state.startedAt += now - orientationPausedAt;
+    orientationPausedAt = null;
+  }
+  tickGame(state, now);
   refreshHud();
   if (state.isOver) {
     endRound();
@@ -1634,6 +1669,9 @@ function closeFieldGuide() {
 }
 
 function quitRoundToHome() {
+  clearTimeout(countdownTimer);
+  pendingRoundMode = null;
+  orientationPausedAt = null;
   if (rafId) {
     cancelAnimationFrame(rafId);
     rafId = null;
@@ -1695,6 +1733,8 @@ function showResultScreen() {
   renderLeaderboard('result', mode);
 
   showScreen('result');
+  screens.result.scrollTop = 0;
+  els.resultRestart.focus({ preventScroll: true });
   refreshBestTimeLabel();
   startLeaderboardPoll(leaderboardModeForGameMode(mode));
   prepareLeaderboardNameEntry(finalScore, seconds, won, mode);
@@ -1780,12 +1820,14 @@ function init() {
     if (e.key === 'Escape' && fieldGuideOpen) closeFieldGuide();
   });
   els.quitButton.addEventListener('click', quitRoundToHome);
+  $('orientationHome').addEventListener('click', quitRoundToHome);
   els.restartButton.addEventListener('click', () => beginGameSequence());
   els.leaderboardNameForm.addEventListener('submit', submitLeaderboardName);
   els.resultRestart.addEventListener('click', () => beginGameSequence());
   els.resultHome.addEventListener('click', () => showScreen('splash'));
 
   window.addEventListener('resize', () => {
+    if (pendingRoundMode && !needsLandscape()) startRound(pendingRoundMode);
     stageRect = els.marshStage.getBoundingClientRect();
     updateFocus();
     updateTutorialFocus();

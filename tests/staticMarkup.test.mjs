@@ -240,11 +240,15 @@ test('service worker no longer caches superseded source assets', () => {
   assert.doesNotMatch(serviceWorker, /SFBBO_Logo_Rounded\.png/);
 });
 
-test('portrait mode lock exists for touch devices and tutorial can scroll', () => {
-  assert.match(html, /id="globalOrientationLock"/);
-  assert.match(styles, /\.global-orientation-lock/);
+test('portrait browsing remains available outside the round', () => {
+  assert.doesNotMatch(html, /id="globalOrientationLock"/);
+  assert.match(html, /id="orientationHome"/);
   assert.match(styles, /\.screen-tutorial\s*\{[\s\S]*overflow-y:\s*auto/);
-  assert.match(styles, /@media \(orientation: portrait\) and \(pointer: coarse\)[\s\S]*\.global-orientation-lock\s*\{[\s\S]*display:\s*flex/);
+});
+
+test('replay follows the result summary before the leaderboard', () => {
+  assert.ok(html.indexOf('id="resultStats"') < html.indexOf('id="resultRestart"'));
+  assert.ok(html.indexOf('id="resultRestart"') < html.indexOf('id="resultLeaderboard"'));
 });
 
 test('service worker only caches same-origin requests', () => {
@@ -265,8 +269,8 @@ test('start and restart paths call unlockAudioContext', () => {
 
 test('game uses one consistent viewing mode', () => {
   assert.doesNotMatch(html, /EnvironmentToggle/);
-  assert.match(html, /src\/styles\.css\?v=35/);
-  assert.match(html, /src\/app\.js\?v=35/);
+  assert.match(html, /src\/styles\.css\?v=36/);
+  assert.match(html, /src\/app\.js\?v=36/);
   assert.match(appSource, /classList\.remove\('outdoor-mode'\)/);
   assert.doesNotMatch(styles, /outdoor-mode/);
   assert.match(appSource, /async function requestWakeLock\(\)/);

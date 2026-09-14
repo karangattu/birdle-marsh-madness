@@ -1115,20 +1115,6 @@ body {
 }
 
 .orientation-guard {
-  position: absolute;
-  inset: 0;
-  z-index: 8;
-  display: none;
-  align-items: center;
-  justify-content: center;
-  padding: clamp(18px, 5vmin, 40px);
-  background:
-    radial-gradient(circle at top, rgba(var(--accent-rgb), 0.14) 0%, transparent 48%),
-    var(--overlay-bg-grad);
-  backdrop-filter: blur(14px);
-}
-
-.global-orientation-lock {
   position: fixed;
   inset: 0;
   z-index: 40;
@@ -2056,6 +2042,7 @@ body {
 }
 
 .result-actions {
+  margin: 12px 0 20px;
   display: flex;
   gap: 12px;
   justify-content: center;
@@ -2348,22 +2335,20 @@ body {
   .ghost-action { padding: 6px 12px; font-size: 0.8rem; }
   .bird-buttons { gap: 4px; grid-template-columns: repeat(6, minmax(0, 1fr)); }
   .bird-button {
-    min-height: 0;
-    height: 32px;
-    padding: 3px 8px;
+    min-height: 48px;
+    padding: 4px 6px;
     font-size: 0.7rem;
-    line-height: 1.1;
+    line-height: 1.3;
     gap: 6px;
     justify-content: center;
     text-align: center;
-    white-space: nowrap;
+    white-space: normal;
     border-radius: 10px;
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 4px 10px rgba(0, 0, 0, 0.16);
   }
   .bird-button > span:first-of-type {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    white-space: normal;
+    overflow-wrap: normal;
   }
   .bird-button-headshot {
     width: 20px;
@@ -2436,15 +2421,6 @@ body {
 
 /* Portrait/narrow fallback */
 @media (orientation: portrait) and (pointer: coarse) {
-  .global-orientation-lock {
-    display: flex;
-  }
-
-  .app {
-    pointer-events: none;
-    user-select: none;
-  }
-
   .orientation-guard {
     display: flex;
   }
@@ -2487,4 +2463,29 @@ body {
   .leaderboard-name-controls {
     grid-template-columns: 1fr auto;
   }
+}
+
+.target-status {
+  margin: 0;
+  text-align: center;
+  font-size: 0.75rem;
+  line-height: 1.3;
+  color: var(--text-dim);
+}
+.target-status.is-ready { color: var(--good); font-weight: 700; }
+.magnified-zoom .marsh-bird.is-target {
+  outline: 1px solid #fff3bf;
+  outline-offset: 2px;
+  border-radius: 50%;
+  z-index: 1;
+}
+@media (max-height: 480px) {
+  .target-status { font-size: 0.68rem; }
+  .bird-button .check { position: absolute; right: 2px; top: 2px; margin: 0; }
+}
+
+@media (max-width: 720px) and (orientation: portrait) {
+  .screen-splash { justify-content: flex-start; overflow-y: auto; }
+  .splash-poster { position: relative; height: auto; max-height: 45dvh; flex: none; }
+  .splash-bottom-bar { padding: 16px; gap: 12px; }
 }
