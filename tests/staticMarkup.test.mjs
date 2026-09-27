@@ -269,8 +269,8 @@ test('start and restart paths call unlockAudioContext', () => {
 
 test('game uses one consistent viewing mode', () => {
   assert.doesNotMatch(html, /EnvironmentToggle/);
-  assert.match(html, /src\/styles\.css\?v=36/);
-  assert.match(html, /src\/app\.js\?v=36/);
+  assert.match(html, /src\/styles\.css\?v=37/);
+  assert.match(html, /src\/app\.js\?v=37/);
   assert.match(appSource, /classList\.remove\('outdoor-mode'\)/);
   assert.doesNotMatch(styles, /outdoor-mode/);
   assert.match(appSource, /async function requestWakeLock\(\)/);
@@ -301,3 +301,10 @@ test('Mona Sans is bundled and preloaded for offline play', () => {
   assert.match(styles, /url\('\.\.\/assets\/fonts\/mona-sans\.woff2'\)/);
   assert.match(serviceWorker, /assets\/fonts\/mona-sans\.woff2/);
 });
+
+test('focused bird does not have yellow outline or border-radius clipping', () => {
+  assert.doesNotMatch(styles, /\.marsh-bird\.is-target[\s\S]*?outline/);
+  assert.doesNotMatch(styles, /\.marsh-bird\.is-target[\s\S]*?border-radius/);
+  assert.doesNotMatch(styles, /#fff3bf/);
+});
+

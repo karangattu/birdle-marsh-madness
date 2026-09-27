@@ -2474,9 +2474,6 @@ body {
 }
 .target-status.is-ready { color: var(--good); font-weight: 700; }
 .magnified-zoom .marsh-bird.is-target {
-  outline: 1px solid #fff3bf;
-  outline-offset: 2px;
-  border-radius: 50%;
   z-index: 1;
 }
 @media (max-height: 480px) {
