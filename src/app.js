@@ -5,6 +5,7 @@ import {
   createGameState,
   createPlacements,
   isTopLeaderboardScore,
+  mergePendingLeaderboardScores,
   normalizeLeaderboardPlayerKey,
   normalizeGameMode,
   selectUniqueLeaderboardEntries,
@@ -35,6 +36,9 @@ const LEGACY_HIGH_SCORE_KEY = 'birdle:highScore';
 const GAME_MODE_KEY = 'birdle:selectedGameMode';
 const PLAYER_LABEL_KEY = 'birdle:playerLabel';
 const INSTALL_PROMPT_DISMISS_KEY = 'birdle:installPromptDismissed';
+const LEADERBOARD_CACHE_KEY = 'birdle:leaderboardCache';
+const PENDING_SCORES_KEY = 'birdle:pendingScores';
+const PENDING_SCORES_LIMIT = 20;
 const SUPABASE_URL = 'https://ovwktjjeoowlktdfbuuu.supabase.co';
 const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_B2pz5WTA3UEVUeKACIgmBw_8_r0S3kU';
 const LEADERBOARD_TABLE = 'marsh_madness_leaderboard';
@@ -251,6 +255,7 @@ let leaderboardNameRequestId = 0;
 let realtimeChannel = null;
 let supabaseClient = null;
 let leaderboardPollTimer = null;
+let flushingPendingScores = false;
 let previousLeaderboardKeys = new Map(GAME_MODE_ORDER.map((mode) => [mode, []]));
 
 function getSupabaseClient() {
@@ -434,7 +439,9 @@ async function fetchLeaderboard(mode) {
   });
   if (!response.ok) throw new Error(`Leaderboard fetch failed: ${response.status}`);
   const entries = await response.json();
-  return selectUniqueLeaderboardEntries(entries, LEADERBOARD_LIMIT);
+  const uniqueEntries = selectUniqueLeaderboardEntries(entries, LEADERBOARD_LIMIT);
+  persistLeaderboardCache(normalizeGameMode(mode), uniqueEntries);
+  return uniqueEntries;
 }
 
 async function saveLeaderboardScore(entry) {
@@ -451,6 +458,57 @@ async function saveLeaderboardScore(entry) {
   if (!response.ok) throw new Error(`Leaderboard save failed: ${response.status}`);
 }
 
+// ---------------- Offline leaderboard storage ----------------
+function persistLeaderboardCache(mode, entries) {
+  try {
+    const gameMode = normalizeGameMode(mode);
+    const cache = readJsonRecord(LEADERBOARD_CACHE_KEY);
+    cache[gameMode] = entries;
+    localStorage.setItem(LEADERBOARD_CACHE_KEY, JSON.stringify(cache));
+  } catch {
+    /* ignore */
+  }
+}
+
+function readPersistedLeaderboard(mode) {
+  const gameMode = normalizeGameMode(mode);
+  try {
+    const cache = readJsonRecord(LEADERBOARD_CACHE_KEY);
+    const entries = cache[gameMode];
+    if (Array.isArray(entries)) return entries;
+  } catch {
+    /* ignore */
+  }
+  return leaderboardCache.get(gameMode) ?? [];
+}
+
+function readPendingScores() {
+  try {
+    const pending = JSON.parse(localStorage.getItem(PENDING_SCORES_KEY) ?? '[]');
+    return Array.isArray(pending) ? pending.filter((item) => item && typeof item === 'object') : [];
+  } catch {
+    return [];
+  }
+}
+
+function writePendingScores(entries) {
+  try {
+    if (!entries.length) localStorage.removeItem(PENDING_SCORES_KEY);
+    else localStorage.setItem(PENDING_SCORES_KEY, JSON.stringify(entries));
+  } catch {
+    /* ignore */
+  }
+}
+
+function queuePendingScore(entry) {
+  writePendingScores(mergePendingLeaderboardScores(readPendingScores(), entry, PENDING_SCORES_LIMIT));
+}
+
+function readJsonRecord(key) {
+  const parsed = JSON.parse(localStorage.getItem(key) ?? '{}');
+  return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {};
+}
+
 
 async function refreshLeaderboard(mode, targets) {
   for (const target of targets) {
@@ -464,10 +522,14 @@ async function refreshLeaderboard(mode, targets) {
     }
   } catch {
     for (const target of targets) {
-      renderLeaderboard(target, mode, leaderboardCache.get(mode) ?? []);
-      setLeaderboardStatus(target, mode, 'Leaderboard unavailable');
+      renderLeaderboard(target, mode, readPersistedLeaderboard(mode));
+      setLeaderboardStatus(target, mode, leaderboardOfflineStatusText());
     }
   }
+}
+
+function leaderboardOfflineStatusText() {
+  return navigator.onLine ? 'Leaderboard unavailable' : 'Offline — showing saved scores';
 }
 
 function renderLeaderboard(target, mode, entries = leaderboardCache.get(mode) ?? []) {
@@ -582,9 +644,9 @@ async function prepareLeaderboardNameEntry(finalScore, seconds, won, mode = stat
     renderLeaderboard('result', gameMode, entries);
   } catch {
     if (requestId !== leaderboardNameRequestId || activeScreen !== 'result') return;
-    renderLeaderboard('result', gameMode, leaderboardCache.get(gameMode) ?? []);
-    setLeaderboardStatus('result', gameMode, 'Leaderboard unavailable');
-    return;
+    entries = readPersistedLeaderboard(gameMode);
+    renderLeaderboard('result', gameMode, entries);
+    setLeaderboardStatus('result', gameMode, leaderboardOfflineStatusText());
   }
 
   if (!isTopLeaderboardScore(finalScore, entries, LEADERBOARD_LIMIT, storedPlayerLabel)) {
@@ -618,7 +680,8 @@ function showLeaderboardNameForm(mode, finalScore) {
   const gameMode = normalizeGameMode(mode);
   const modeLabel = getModeDetail(gameMode).label;
   els.leaderboardNameTitle.textContent = `${modeLabel} Top 5 score`;
-  els.leaderboardNameHelp.textContent = `Save ${finalScore} points to the ${modeLabel} leaderboard.`;
+  els.leaderboardNameHelp.textContent = `Save ${finalScore} points to the ${modeLabel} leaderboard.`
+    + (navigator.onLine ? '' : ' You are offline — your score will upload when you reconnect.');
   els.leaderboardPlayerName.value = '';
   els.leaderboardNameStatus.textContent = '';
   els.leaderboardNameSubmit.disabled = false;
@@ -655,6 +718,11 @@ async function submitLeaderboardName(event) {
   els.leaderboardNameSubmit.textContent = 'Saving';
   els.leaderboardNameStatus.textContent = 'Confirming your Top 5 spot.';
 
+  if (!navigator.onLine) {
+    saveLeaderboardScoreOffline(playerLabel);
+    return;
+  }
+
   try {
     const latestEntries = await fetchLeaderboard(gameMode);
     leaderboardCache.set(gameMode, latestEntries);
@@ -673,11 +741,60 @@ async function submitLeaderboardName(event) {
     els.leaderboardNameStatus.textContent = 'Saved to the Top 5.';
     els.leaderboardNameSubmit.textContent = 'Saved';
     await refreshLeaderboard(gameMode, ['result']);
-  } catch {
+  } catch (error) {
+    if (!navigator.onLine || error instanceof TypeError) {
+      saveLeaderboardScoreOffline(playerLabel);
+      return;
+    }
     els.leaderboardNameForm.classList.remove('is-saving');
     els.leaderboardNameSubmit.disabled = false;
     els.leaderboardNameSubmit.textContent = 'Try again';
     els.leaderboardNameStatus.textContent = 'Could not save right now. Please try again.';
+  }
+}
+
+function saveLeaderboardScoreOffline(playerLabel) {
+  queuePendingScore({
+    ...pendingLeaderboardEntry,
+    player_label: playerLabel,
+    player_key: normalizeLeaderboardPlayerKey(playerLabel),
+  });
+  writePlayerLabel(playerLabel);
+  pendingLeaderboardEntry = null;
+  els.leaderboardNameForm.classList.remove('is-saving');
+  els.leaderboardNameForm.classList.add('is-saved');
+  els.leaderboardNameStatus.textContent = 'Saved on this device. It will upload when you reconnect.';
+  els.leaderboardNameSubmit.textContent = 'Saved';
+}
+
+async function flushPendingScores() {
+  if (flushingPendingScores || !navigator.onLine) return;
+  const pending = readPendingScores();
+  if (pending.length === 0) return;
+
+  flushingPendingScores = true;
+  const remaining = [];
+  const flushedModes = new Set();
+  try {
+    for (const entry of pending) {
+      try {
+        await saveLeaderboardScore(entry);
+        flushedModes.add(gameModeForLeaderboardMode(entry.mode));
+      } catch (error) {
+        if (!navigator.onLine || error instanceof TypeError) {
+          remaining.push(...pending.slice(pending.indexOf(entry)));
+          break;
+        }
+        remaining.push(entry);
+      }
+    }
+  } finally {
+    flushingPendingScores = false;
+  }
+
+  if (remaining.length !== pending.length) writePendingScores(remaining);
+  for (const mode of flushedModes) {
+    if (activeScreen === 'result') await refreshLeaderboard(mode, ['result']).catch(() => {});
   }
 }
 
@@ -1730,7 +1847,7 @@ function showResultScreen() {
     ? `You are at the ${modeDetail.label} high score.`
     : `You are ${pointsFromHighScore} points from the ${modeDetail.label} high score.`;
   els.resultSupport.innerHTML = 'Want to support the real-world conservation work behind Birdle? Explore SFBBO surveys and field projects at <a href="https://sfbbo.org" target="_blank" rel="noreferrer">sfbbo.org</a>.';
-  renderLeaderboard('result', mode);
+  renderLeaderboard('result', mode, readPersistedLeaderboard(mode));
 
   showScreen('result');
   screens.result.scrollTop = 0;
@@ -1845,7 +1962,9 @@ function init() {
 
   window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
   window.addEventListener('appinstalled', handleAppInstalled);
+  window.addEventListener('online', flushPendingScores);
 
+  flushPendingScores();
   registerServiceWorker();
 }
 

@@ -148,6 +148,21 @@ test('app upserts leaderboard scores by unique player key', () => {
   assert.match(appSource, /Prefer: 'resolution=merge-duplicates,return=minimal'/);
 });
 
+test('offline scores are queued locally and uploaded when the connection returns', () => {
+  assert.match(appSource, /PENDING_SCORES_KEY\s*=\s*'birdle:pendingScores'/);
+  assert.match(appSource, /function queuePendingScore\(/);
+  assert.match(appSource, /function flushPendingScores\(/);
+  assert.match(appSource, /navigator\.onLine/);
+  assert.match(appSource, /window\.addEventListener\('online', flushPendingScores\)/);
+});
+
+test('leaderboard fetches fall back to a persisted copy when offline', () => {
+  assert.match(appSource, /LEADERBOARD_CACHE_KEY\s*=\s*'birdle:leaderboardCache'/);
+  assert.match(appSource, /function persistLeaderboardCache\(/);
+  assert.match(appSource, /function readPersistedLeaderboard\(/);
+});
+
+
 test('game over screen includes an SFBBO support line', () => {
   assert.match(html, /id="resultSupport"/);
   assert.match(appSource, /Want to support the real-world conservation work behind Birdle\? Explore SFBBO surveys and field projects at <a href="https:\/\/sfbbo\.org" target="_blank" rel="noreferrer">sfbbo\.org<\/a>\./);
@@ -269,8 +284,8 @@ test('start and restart paths call unlockAudioContext', () => {
 
 test('game uses one consistent viewing mode', () => {
   assert.doesNotMatch(html, /EnvironmentToggle/);
-  assert.match(html, /src\/styles\.css\?v=37/);
-  assert.match(html, /src\/app\.js\?v=37/);
+  assert.match(html, /src\/styles\.css\?v=38/);
+  assert.match(html, /src\/app\.js\?v=38/);
   assert.match(appSource, /classList\.remove\('outdoor-mode'\)/);
   assert.doesNotMatch(styles, /outdoor-mode/);
   assert.match(appSource, /async function requestWakeLock\(\)/);

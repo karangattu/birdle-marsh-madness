@@ -262,6 +262,31 @@ export function normalizeGameMode(mode) {
   return mode === GAME_MODES.expert ? GAME_MODES.expert : GAME_MODES.standard;
 }
 
+export function mergePendingLeaderboardScores(pending, entry, limit = 20) {
+  const entries = (Array.isArray(pending) ? pending : []).filter((item) => item && typeof item === 'object');
+  if (!entry || typeof entry !== 'object') return entries;
+
+  const entryKey = pendingScoreKey(entry);
+  const existing = entries.find((item) => pendingScoreKey(item) === entryKey);
+  const better = !existing
+    || (Number.parseInt(entry.score, 10) || 0) > (Number.parseInt(existing.score, 10) || 0);
+  if (!better) return entries;
+
+  const next = entries.filter((item) => item !== existing);
+  next.push(entry);
+
+  const maxEntries = Number.isFinite(limit) ? Math.max(1, Math.trunc(limit)) : Infinity;
+  if (next.length > maxEntries) {
+    next.sort((a, b) => (Number.parseInt(b.score, 10) || 0) - (Number.parseInt(a.score, 10) || 0));
+    next.length = maxEntries;
+  }
+  return next;
+}
+
+function pendingScoreKey(entry) {
+  return `${entry?.mode ?? ''}:${entry?.player_key || normalizeLeaderboardPlayerKey(entry?.player_label ?? '')}`;
+}
+
 function getRoundLengthSeconds(state) {
   return state.roundLengthSeconds ?? GAME_MODE_LENGTH_SECONDS[normalizeGameMode(state.mode)];
 }

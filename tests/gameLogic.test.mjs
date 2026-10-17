@@ -8,6 +8,7 @@ import {
   createGameState,
   createPlacements,
   isTopLeaderboardScore,
+  mergePendingLeaderboardScores,
   normalizeLeaderboardPlayerKey,
   recordGuess,
   score,
@@ -256,6 +257,58 @@ test('leaderboard qualification compares against the player’s existing best sc
   assert.equal(isTopLeaderboardScore(1201, currentTopFive, 5, 'Alice'), true);
   assert.equal(isTopLeaderboardScore(501, currentTopFive, 5, 'Frank'), true);
 });
+
+test('pending offline scores queue a new player entry unchanged', () => {
+  const entry = { mode: 'regular', player_label: 'Alice', player_key: 'alice', score: 900 };
+  const pending = mergePendingLeaderboardScores([], entry);
+  assert.deepEqual(pending, [entry]);
+});
+
+test('pending offline scores keep the best score per player and mode', () => {
+  const pending = mergePendingLeaderboardScores(
+    [
+      { mode: 'regular', player_key: 'alice', player_label: 'Alice', score: 900 },
+      { mode: 'regular', player_key: 'bob', player_label: 'Bob', score: 800 },
+    ],
+    { mode: 'regular', player_key: 'alice', player_label: 'Alice', score: 700 },
+  );
+
+  assert.deepEqual(pending.map((item) => [item.player_key, item.score]), [
+    ['alice', 900],
+    ['bob', 800],
+  ]);
+});
+
+test('pending offline scores replace a lower queued score for the same player', () => {
+  const pending = mergePendingLeaderboardScores(
+    [{ mode: 'regular', player_key: 'alice', player_label: 'Alice', score: 700 }],
+    { mode: 'regular', player_key: 'alice', player_label: 'Alice', score: 900 },
+  );
+
+  assert.deepEqual(pending.map((item) => item.score), [900]);
+});
+
+test('pending offline scores track each leaderboard mode separately', () => {
+  const pending = mergePendingLeaderboardScores(
+    [{ mode: 'expert', player_key: 'alice', player_label: 'Alice', score: 700 }],
+    { mode: 'regular', player_key: 'alice', player_label: 'Alice', score: 900 },
+  );
+
+  assert.deepEqual(pending.map((item) => [item.mode, item.score]), [
+    ['expert', 700],
+    ['regular', 900],
+  ]);
+});
+
+test('pending offline scores cap the queue by dropping the lowest scores first', () => {
+  const queued = [900, 800, 700].map((value) => ({
+    mode: 'regular', player_key: `p${value}`, player_label: `P${value}`, score: value,
+  }));
+  const pending = mergePendingLeaderboardScores(queued, { mode: 'regular', player_key: 'p1000', player_label: 'P1000', score: 1000 }, 3);
+
+  assert.deepEqual(pending.map((item) => item.score), [1000, 900, 800]);
+});
+
 
 test('scope acquires nearest bird, retains through jitter, and releases beyond the eyepiece', () => {
   const placements = [{ birdId: 'a', xPct: 50, yPct: 50 }, { birdId: 'b', xPct: 51, yPct: 50 }];
