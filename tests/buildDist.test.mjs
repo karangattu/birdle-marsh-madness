@@ -51,6 +51,19 @@ test("flat app icon assets exist for web and android mipmaps", () => {
   assert.ok(fs.existsSync(path.resolve("android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png")));
 });
 
+test("release workflow builds and publishes the Android APK on version tags", () => {
+  const workflowPath = path.resolve(".github/workflows/release.yml");
+  assert.ok(fs.existsSync(workflowPath));
+
+  const workflow = fs.readFileSync(workflowPath, "utf-8");
+  assert.match(workflow, /tags:\s*\r?\n\s*-\s*'v\*'/);
+  assert.match(workflow, /contents: write/);
+  assert.match(workflow, /npm run build:web/);
+  assert.match(workflow, /npx cap sync android/);
+  assert.match(workflow, /gradlew assembleDebug/);
+  assert.match(workflow, /gh release create/);
+});
+
 test("release APK is present in releases directory", () => {
   const apkPath = path.resolve("releases/MarshMadness.apk");
   assert.ok(fs.existsSync(apkPath));
